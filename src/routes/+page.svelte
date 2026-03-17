@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { Element, Phase } from '$lib/types/element';
 	import { getPhaseAtTemperature } from '$lib/utils/element-helpers';
+	import { PROPERTIES, computeHeatmapFills, computeHeatmapRange } from '$lib/utils/heatmap';
 	import PeriodicTable from '$lib/components/PeriodicTable.svelte';
 	import SidePanel from '$lib/components/SidePanel.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import TemperatureSlider from '$lib/components/TemperatureSlider.svelte';
+	import PropertiesPanel from '$lib/components/PropertiesPanel.svelte';
 	import elementsData from '$lib/data/elements.json';
 
 	const elements: Element[] = elementsData as Element[];
@@ -12,6 +14,25 @@
 	let searchQuery = $state('');
 	let temperature = $state(298);
 	let selectedElement: Element | null = $state(null);
+
+	// --- Properties heatmap state ---
+	let propertiesOpen = $state(false);
+	let selectedPropertyKey: string | null = $state(null);
+
+	let selectedProperty = $derived(
+		selectedPropertyKey ? PROPERTIES.find((p) => p.key === selectedPropertyKey) ?? null : null
+	);
+
+	let heatmapFills = $derived.by(() => {
+		if (!selectedProperty) return null;
+		return computeHeatmapFills(elements, selectedProperty);
+	});
+
+	let heatmapMeta = $derived.by(() => {
+		if (!selectedProperty) return null;
+		const range = computeHeatmapRange(elements, selectedProperty);
+		return { label: selectedProperty.label, unit: selectedProperty.unit, min: range.min, max: range.max };
+	});
 
 	let phases = $derived.by(() => {
 		const map = new Map<number, Phase>();
@@ -57,6 +78,27 @@
 
 	function handleCloseDetail() {
 		selectedElement = null;
+		// Reopen properties panel if a property is still selected
+		if (selectedPropertyKey) {
+			propertiesOpen = true;
+		}
+	}
+
+	function handlePropertySelect(key: string | null) {
+		selectedPropertyKey = key;
+		if (!key) {
+			propertiesOpen = false;
+		}
+	}
+
+	function handlePropertiesClose() {
+		propertiesOpen = false;
+		selectedPropertyKey = null;
+	}
+
+	function openProperties() {
+		propertiesOpen = true;
+		menuOpen = false;
 	}
 
 	function handleSearch(value: string) {
@@ -106,7 +148,8 @@
 				? Math.min(fitHeight, 1)
 				: Math.min(fitWidth, fitHeight, 1);
 			// Max zoom: in portrait, cap so table height fills area.
-			maxZoom = isPortrait ? Math.max(fitHeight, minZoom) : 3;
+			// In landscape, cap at half the table width fitting the viewport.
+			maxZoom = isPortrait ? Math.max(fitHeight, minZoom) : Math.max(fitWidth * 2, minZoom);
 
 			// Detect orientation change
 			const orientationChanged = lastIsPortrait !== null && lastIsPortrait !== isPortrait;
@@ -171,9 +214,19 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<main class="table-area" bind:this={tableAreaEl} onwheel={handleWheel}>
+<main class="table-area" class:properties-open={propertiesOpen && !selectedElement} bind:this={tableAreaEl} onwheel={handleWheel}>
+	{#if propertiesOpen && !selectedElement}
+		<div class="properties-sidebar">
+			<PropertiesPanel
+				properties={PROPERTIES}
+				selectedKey={selectedPropertyKey}
+				onselect={handlePropertySelect}
+				onclose={handlePropertiesClose}
+			/>
+		</div>
+	{/if}
 	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left">
-		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} />
+		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} {heatmapFills} {heatmapMeta} />
 	</div>
 </main>
 
@@ -194,7 +247,7 @@
 			<line x1="6" y1="6" x2="18" y2="18" />
 		</svg>
 	</button>
-{:else}
+{:else if !propertiesOpen}
 	<!-- FAB hamburger button -->
 	<button class="fab" onclick={toggleMenu} aria-label="Open controls menu">
 		<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -221,6 +274,17 @@
 		</div>
 		<div class="menu-section">
 			<TemperatureSlider {temperature} onchange={handleTemperature} />
+		</div>
+		<div class="menu-section">
+			<button class="menu-btn" onclick={openProperties}>
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="3" width="7" height="7" />
+					<rect x="14" y="3" width="7" height="7" />
+					<rect x="3" y="14" width="7" height="7" />
+					<rect x="14" y="14" width="7" height="7" />
+				</svg>
+				Properties
+			</button>
 		</div>
 	</div>
 {/if}
@@ -296,5 +360,58 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	.menu-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border-radius: 8px;
+		border: 1px solid var(--border-color);
+		background: var(--bg-cell);
+		color: var(--text-primary);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-family: inherit;
+		transition: background 0.15s;
+	}
+
+	.menu-btn:hover {
+		background: var(--border-color);
+	}
+
+	/* Properties sidebar */
+	.properties-sidebar {
+		position: fixed;
+		z-index: 20;
+	}
+
+	@media (orientation: landscape) {
+		.properties-sidebar {
+			top: 0;
+			left: 0;
+			bottom: 0;
+			width: 180px;
+		}
+
+		.table-area.properties-open {
+			padding-left: 180px;
+		}
+	}
+
+	@media (orientation: portrait) {
+		.properties-sidebar {
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: auto;
+			max-height: 120px;
+		}
+
+		.table-area.properties-open {
+			padding-bottom: 120px;
+		}
 	}
 </style>

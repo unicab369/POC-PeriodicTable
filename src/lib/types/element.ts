@@ -41,4 +41,6 @@ export interface Element {
 	radius_van_der_waals: number | null;
 	radius_covalent: number | null;
 	spectral_lines: number[] | null;
+	molar_volume: number | null;
+	thermal_conductivity: number | null;
 }

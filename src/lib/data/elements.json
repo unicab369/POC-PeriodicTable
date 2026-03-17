@@ -35,7 +35,9 @@
       434,
       486.1,
       656.3
-    ]
+    ],
+    "molar_volume": 11.42,
+    "thermal_conductivity": 0.1805
   },
   {
     "number": 2,
@@ -77,7 +79,9 @@
       587.6,
       667.8,
       706.5
-    ]
+    ],
+    "molar_volume": 21,
+    "thermal_conductivity": 0.1513
   },
   {
     "number": 3,
@@ -116,7 +120,9 @@
     "spectral_lines": [
       610.4,
       670.8
-    ]
+    ],
+    "molar_volume": 13.02,
+    "thermal_conductivity": 84.8
   },
   {
     "number": 4,
@@ -155,7 +161,9 @@
     "radius_covalent": 96,
     "spectral_lines": [
       457.3
-    ]
+    ],
+    "molar_volume": 4.85,
+    "thermal_conductivity": 200
   },
   {
     "number": 5,
@@ -195,7 +203,9 @@
     "radius_covalent": 84,
     "spectral_lines": [
       449.8
-    ]
+    ],
+    "molar_volume": 4.39,
+    "thermal_conductivity": 27.4
   },
   {
     "number": 6,
@@ -240,7 +250,9 @@
       538,
       600.1,
       658.8
-    ]
+    ],
+    "molar_volume": 5.29,
+    "thermal_conductivity": 129
   },
   {
     "number": 7,
@@ -289,7 +301,9 @@
       648.2,
       742.4,
       744.2
-    ]
+    ],
+    "molar_volume": 13.54,
+    "thermal_conductivity": 0.02583
   },
   {
     "number": 8,
@@ -338,7 +352,9 @@
       645.4,
       700.2,
       777.4
-    ]
+    ],
+    "molar_volume": 14,
+    "thermal_conductivity": 0.02658
   },
   {
     "number": 9,
@@ -387,7 +403,9 @@
       712.8,
       720.2,
       731.1
-    ]
+    ],
+    "molar_volume": 11.2,
+    "thermal_conductivity": 0.0277
   },
   {
     "number": 10,
@@ -450,7 +468,9 @@
       717.4,
       724.5,
       743.9
-    ]
+    ],
+    "molar_volume": 13.23,
+    "thermal_conductivity": 0.0491
   },
   {
     "number": 11,
@@ -498,7 +518,9 @@
     "spectral_lines": [
       589,
       589.6
-    ]
+    ],
+    "molar_volume": 23.78,
+    "thermal_conductivity": 142
   },
   {
     "number": 12,
@@ -550,7 +572,9 @@
       516.7,
       517.3,
       518.4
-    ]
+    ],
+    "molar_volume": 14,
+    "thermal_conductivity": 156
   },
   {
     "number": 13,
@@ -600,7 +624,9 @@
     "spectral_lines": [
       394.4,
       396.2
-    ]
+    ],
+    "molar_volume": 10,
+    "thermal_conductivity": 237
   },
   {
     "number": 14,
@@ -655,7 +681,9 @@
       568.4,
       577.2,
       634.7
-    ]
+    ],
+    "molar_volume": 12.06,
+    "thermal_conductivity": 149
   },
   {
     "number": 15,
@@ -707,7 +735,9 @@
     "spectral_lines": [
       602.4,
       604.3
-    ]
+    ],
+    "molar_volume": 17.02,
+    "thermal_conductivity": 0.236
   },
   {
     "number": 16,
@@ -767,7 +797,9 @@
       564,
       604.3,
       605.3
-    ]
+    ],
+    "molar_volume": 15.53,
+    "thermal_conductivity": 0.205
   },
   {
     "number": 17,
@@ -826,7 +858,9 @@
       614,
       725.7,
       741.4
-    ]
+    ],
+    "molar_volume": 17.39,
+    "thermal_conductivity": 0.0089
   },
   {
     "number": 18,
@@ -897,7 +931,9 @@
       751.5,
       763.5,
       772.4
-    ]
+    ],
+    "molar_volume": 22.56,
+    "thermal_conductivity": 0.01772
   },
   {
     "number": 19,
@@ -958,7 +994,9 @@
       693.9,
       766.5,
       769.9
-    ]
+    ],
+    "molar_volume": 45.94,
+    "thermal_conductivity": 102.5
   },
   {
     "number": 20,
@@ -1033,7 +1071,9 @@
       714.8,
       720.2,
       732.6
-    ]
+    ],
+    "molar_volume": 25.86,
+    "thermal_conductivity": 201
   },
   {
     "number": 21,
@@ -1094,7 +1134,9 @@
       402,
       402.4,
       424.7
-    ]
+    ],
+    "molar_volume": 15,
+    "thermal_conductivity": 15.8
   },
   {
     "number": 22,
@@ -1161,7 +1203,9 @@
       501.4,
       503.6,
       506.5
-    ]
+    ],
+    "molar_volume": 10.64,
+    "thermal_conductivity": 21.9
   },
   {
     "number": 23,
@@ -1225,7 +1269,9 @@
       438.5,
       439,
       440.9
-    ]
+    ],
+    "molar_volume": 8.32,
+    "thermal_conductivity": 30.7
   },
   {
     "number": 24,
@@ -1291,7 +1337,9 @@
       520.5,
       520.6,
       520.8
-    ]
+    ],
+    "molar_volume": 7.23,
+    "thermal_conductivity": 93.9
   },
   {
     "number": 25,
@@ -1355,7 +1403,9 @@
       403.1,
       403.3,
       403.4
-    ]
+    ],
+    "molar_volume": 7.35,
+    "thermal_conductivity": 7.81
   },
   {
     "number": 26,
@@ -1425,7 +1475,9 @@
       392,
       404.6,
       438.4
-    ]
+    ],
+    "molar_volume": 7.09,
+    "thermal_conductivity": 80.4
   },
   {
     "number": 27,
@@ -1491,7 +1543,9 @@
       387.3,
       399.5,
       412.1
-    ]
+    ],
+    "molar_volume": 6.67,
+    "thermal_conductivity": 100
   },
   {
     "number": 28,
@@ -1558,7 +1612,9 @@
       385.8,
       503.5,
       547.7
-    ]
+    ],
+    "molar_volume": 6.59,
+    "thermal_conductivity": 90.9
   },
   {
     "number": 29,
@@ -1627,7 +1683,9 @@
       515.3,
       521.8,
       578.2
-    ]
+    ],
+    "molar_volume": 7.11,
+    "thermal_conductivity": 401
   },
   {
     "number": 30,
@@ -1688,7 +1746,9 @@
       472.2,
       481.1,
       636.2
-    ]
+    ],
+    "molar_volume": 9.16,
+    "thermal_conductivity": 116
   },
   {
     "number": 31,
@@ -1730,7 +1790,9 @@
     "spectral_lines": [
       403.3,
       417.2
-    ]
+    ],
+    "molar_volume": 11.8,
+    "thermal_conductivity": 40.6
   },
   {
     "number": 32,
@@ -1775,7 +1837,9 @@
       468.6,
       474.2,
       475
-    ]
+    ],
+    "molar_volume": 13.63,
+    "thermal_conductivity": 60.2
   },
   {
     "number": 33,
@@ -1818,7 +1882,9 @@
     "radius_covalent": 119,
     "spectral_lines": [
       454.3
-    ]
+    ],
+    "molar_volume": 12.95,
+    "thermal_conductivity": 50.2
   },
   {
     "number": 34,
@@ -1864,7 +1930,9 @@
       474,
       597.5,
       622.5
-    ]
+    ],
+    "molar_volume": 16.42,
+    "thermal_conductivity": 0.519
   },
   {
     "number": 35,
@@ -1916,7 +1984,9 @@
       713,
       734.9,
       751.1
-    ]
+    ],
+    "molar_volume": 19.78,
+    "thermal_conductivity": 0.122
   },
   {
     "number": 36,
@@ -1992,7 +2062,9 @@
       556.2,
       557,
       587.1
-    ]
+    ],
+    "molar_volume": 27.99,
+    "thermal_conductivity": 0.00943
   },
   {
     "number": 37,
@@ -2042,7 +2114,9 @@
       420.2,
       421.6,
       780
-    ]
+    ],
+    "molar_volume": 55.76,
+    "thermal_conductivity": 58.2
   },
   {
     "number": 38,
@@ -2093,7 +2167,9 @@
       407.8,
       421.6,
       460.7
-    ]
+    ],
+    "molar_volume": 33.94,
+    "thermal_conductivity": 35.4
   },
   {
     "number": 39,
@@ -2146,7 +2222,9 @@
       410.2,
       412.8,
       437.5
-    ]
+    ],
+    "molar_volume": 19.88,
+    "thermal_conductivity": 17.2
   },
   {
     "number": 40,
@@ -2192,7 +2270,9 @@
       386.4,
       405.8,
       468.8
-    ]
+    ],
+    "molar_volume": 14.02,
+    "thermal_conductivity": 22.6
   },
   {
     "number": 41,
@@ -2239,7 +2319,9 @@
       405.9,
       407.9,
       410.1
-    ]
+    ],
+    "molar_volume": 10.83,
+    "thermal_conductivity": 53.7
   },
   {
     "number": 42,
@@ -2311,7 +2393,9 @@
       550.6,
       553.3,
       557
-    ]
+    ],
+    "molar_volume": 9.38,
+    "thermal_conductivity": 138
   },
   {
     "number": 43,
@@ -2350,7 +2434,9 @@
     "molar_heat": 24.27,
     "radius_van_der_waals": null,
     "radius_covalent": 147,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 8.63,
+    "thermal_conductivity": 50.6
   },
   {
     "number": 44,
@@ -2395,7 +2481,9 @@
       469.4,
       487.9,
       523.4
-    ]
+    ],
+    "molar_volume": 8.17,
+    "thermal_conductivity": 117
   },
   {
     "number": 45,
@@ -2437,7 +2525,9 @@
     "spectral_lines": [
       420.5,
       437.5
-    ]
+    ],
+    "molar_volume": 8.28,
+    "thermal_conductivity": 150
   },
   {
     "number": 46,
@@ -2479,7 +2569,9 @@
       389.4,
       417.3,
       447
-    ]
+    ],
+    "molar_volume": 8.56,
+    "thermal_conductivity": 71.8
   },
   {
     "number": 47,
@@ -2523,7 +2615,9 @@
       421.1,
       520.9,
       546.6
-    ]
+    ],
+    "molar_volume": 10.27,
+    "thermal_conductivity": 429
   },
   {
     "number": 48,
@@ -2567,7 +2661,9 @@
       479.9,
       508.6,
       643.8
-    ]
+    ],
+    "molar_volume": 13,
+    "thermal_conductivity": 96.6
   },
   {
     "number": 49,
@@ -2610,7 +2706,9 @@
     "spectral_lines": [
       410.2,
       451.1
-    ]
+    ],
+    "molar_volume": 15.76,
+    "thermal_conductivity": 81.8
   },
   {
     "number": 50,
@@ -2655,7 +2753,9 @@
       380.1,
       452.5,
       484.3
-    ]
+    ],
+    "molar_volume": 16.29,
+    "thermal_conductivity": 66.8
   },
   {
     "number": 51,
@@ -2700,7 +2800,9 @@
     "spectral_lines": [
       424.6,
       476.5
-    ]
+    ],
+    "molar_volume": 18.19,
+    "thermal_conductivity": 24.4
   },
   {
     "number": 52,
@@ -2748,7 +2850,9 @@
       460.8,
       471.8,
       473.1
-    ]
+    ],
+    "molar_volume": 20.46,
+    "thermal_conductivity": 3
   },
   {
     "number": 53,
@@ -2791,7 +2895,9 @@
       516.1,
       533.8,
       546.5
-    ]
+    ],
+    "molar_volume": 25.72,
+    "thermal_conductivity": 0.449
   },
   {
     "number": 54,
@@ -2841,7 +2947,9 @@
       533.9,
       541.9,
       547.3
-    ]
+    ],
+    "molar_volume": 35.92,
+    "thermal_conductivity": 0.00565
   },
   {
     "number": 55,
@@ -2885,7 +2993,9 @@
       455.5,
       459.3,
       672.3
-    ]
+    ],
+    "molar_volume": 70.94,
+    "thermal_conductivity": 35.9
   },
   {
     "number": 56,
@@ -2932,7 +3042,9 @@
       614.2,
       649.7,
       659.5
-    ]
+    ],
+    "molar_volume": 38.16,
+    "thermal_conductivity": 18.4
   },
   {
     "number": 57,
@@ -2981,7 +3093,9 @@
       418.7,
       492.2,
       500.3
-    ]
+    ],
+    "molar_volume": 22.39,
+    "thermal_conductivity": 13.4
   },
   {
     "number": 58,
@@ -3027,7 +3141,9 @@
     "spectral_lines": [
       413.4,
       418.7
-    ]
+    ],
+    "molar_volume": 20.69,
+    "thermal_conductivity": 11.3
   },
   {
     "number": 59,
@@ -3073,7 +3189,9 @@
       422.3,
       440.9,
       513.3
-    ]
+    ],
+    "molar_volume": 20.8,
+    "thermal_conductivity": 12.5
   },
   {
     "number": 60,
@@ -3117,7 +3235,9 @@
     "spectral_lines": [
       430.4,
       463.4
-    ]
+    ],
+    "molar_volume": 20.59,
+    "thermal_conductivity": 16.5
   },
   {
     "number": 61,
@@ -3158,7 +3278,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": 199,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 20.23,
+    "thermal_conductivity": 17.9
   },
   {
     "number": 62,
@@ -3203,7 +3325,9 @@
       442.4,
       470.4,
       546.7
-    ]
+    ],
+    "molar_volume": 19.98,
+    "thermal_conductivity": 13.3
   },
   {
     "number": 63,
@@ -3248,7 +3372,9 @@
       390.7,
       397.2,
       459.4
-    ]
+    ],
+    "molar_volume": 28.97,
+    "thermal_conductivity": 13.9
   },
   {
     "number": 64,
@@ -3293,7 +3419,9 @@
       405.4,
       405.8,
       407.9
-    ]
+    ],
+    "molar_volume": 19.9,
+    "thermal_conductivity": 10.6
   },
   {
     "number": 65,
@@ -3337,7 +3465,9 @@
     "spectral_lines": [
       387.4,
       432.6
-    ]
+    ],
+    "molar_volume": 19.31,
+    "thermal_conductivity": 11.1
   },
   {
     "number": 66,
@@ -3382,7 +3512,9 @@
       404.6,
       418.7,
       421.2
-    ]
+    ],
+    "molar_volume": 19.01,
+    "thermal_conductivity": 10.7
   },
   {
     "number": 67,
@@ -3427,7 +3559,9 @@
       405.4,
       410.4,
       416.3
-    ]
+    ],
+    "molar_volume": 18.74,
+    "thermal_conductivity": 16.2
   },
   {
     "number": 68,
@@ -3471,7 +3605,9 @@
     "spectral_lines": [
       400.8,
       415.1
-    ]
+    ],
+    "molar_volume": 18.46,
+    "thermal_conductivity": 14.5
   },
   {
     "number": 69,
@@ -3517,7 +3653,9 @@
       410.6,
       418.8,
       420.4
-    ]
+    ],
+    "molar_volume": 18.12,
+    "thermal_conductivity": 16.9
   },
   {
     "number": 70,
@@ -3561,7 +3699,9 @@
     "spectral_lines": [
       398.8,
       555.6
-    ]
+    ],
+    "molar_volume": 24.84,
+    "thermal_conductivity": 38.5
   },
   {
     "number": 71,
@@ -3606,7 +3746,9 @@
     "spectral_lines": [
       451.9,
       547.5
-    ]
+    ],
+    "molar_volume": 17.78,
+    "thermal_conductivity": 16.4
   },
   {
     "number": 72,
@@ -3651,7 +3793,9 @@
       405.4,
       407.6,
       417.4
-    ]
+    ],
+    "molar_volume": 13.44,
+    "thermal_conductivity": 23
   },
   {
     "number": 73,
@@ -3693,7 +3837,9 @@
     "spectral_lines": [
       474.1,
       481.2
-    ]
+    ],
+    "molar_volume": 10.85,
+    "thermal_conductivity": 57.5
   },
   {
     "number": 74,
@@ -3736,7 +3882,9 @@
       400.9,
       407.4,
       430.2
-    ]
+    ],
+    "molar_volume": 9.47,
+    "thermal_conductivity": 173
   },
   {
     "number": 75,
@@ -3780,7 +3928,9 @@
     "spectral_lines": [
       488.9,
       492.4
-    ]
+    ],
+    "molar_volume": 8.86,
+    "thermal_conductivity": 48
   },
   {
     "number": 76,
@@ -3822,7 +3972,9 @@
     "spectral_lines": [
       426.1,
       442
-    ]
+    ],
+    "molar_volume": 8.42,
+    "thermal_conductivity": 87.6
   },
   {
     "number": 77,
@@ -3864,7 +4016,9 @@
     "spectral_lines": [
       380,
       411.3
-    ]
+    ],
+    "molar_volume": 8.52,
+    "thermal_conductivity": 147
   },
   {
     "number": 78,
@@ -3907,7 +4061,9 @@
       392.5,
       404.7,
       441
-    ]
+    ],
+    "molar_volume": 9.09,
+    "thermal_conductivity": 71.6
   },
   {
     "number": 79,
@@ -3948,7 +4104,9 @@
     "radius_covalent": 136,
     "spectral_lines": [
       627.8
-    ]
+    ],
+    "molar_volume": 10.21,
+    "thermal_conductivity": 318
   },
   {
     "number": 80,
@@ -3994,7 +4152,9 @@
       546.1,
       577,
       579.1
-    ]
+    ],
+    "molar_volume": 14.09,
+    "thermal_conductivity": 8.3
   },
   {
     "number": 81,
@@ -4037,7 +4197,9 @@
     "spectral_lines": [
       377.6,
       535
-    ]
+    ],
+    "molar_volume": 17.22,
+    "thermal_conductivity": 46.1
   },
   {
     "number": 82,
@@ -4081,7 +4243,9 @@
     "radius_covalent": 146,
     "spectral_lines": [
       405.8
-    ]
+    ],
+    "molar_volume": 18.26,
+    "thermal_conductivity": 35.3
   },
   {
     "number": 83,
@@ -4126,7 +4290,9 @@
     "radius_covalent": 148,
     "spectral_lines": [
       472.3
-    ]
+    ],
+    "molar_volume": 21.31,
+    "thermal_conductivity": 7.97
   },
   {
     "number": 84,
@@ -4164,7 +4330,9 @@
     "molar_heat": 26.4,
     "radius_van_der_waals": 197,
     "radius_covalent": 140,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 22.97,
+    "thermal_conductivity": 20
   },
   {
     "number": 85,
@@ -4202,7 +4370,9 @@
     "molar_heat": null,
     "radius_van_der_waals": 202,
     "radius_covalent": 150,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": 1.7
   },
   {
     "number": 86,
@@ -4243,7 +4413,9 @@
     "spectral_lines": [
       434.9,
       745
-    ]
+    ],
+    "molar_volume": 50.5,
+    "thermal_conductivity": 0.00361
   },
   {
     "number": 87,
@@ -4282,7 +4454,9 @@
     "molar_heat": null,
     "radius_van_der_waals": 348,
     "radius_covalent": 260,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": 15
   },
   {
     "number": 88,
@@ -4326,7 +4500,9 @@
       434.1,
       468.2,
       482.6
-    ]
+    ],
+    "molar_volume": 41.09,
+    "thermal_conductivity": 18.6
   },
   {
     "number": 89,
@@ -4366,7 +4542,9 @@
     "molar_heat": 27.2,
     "radius_van_der_waals": null,
     "radius_covalent": 215,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 22.55,
+    "thermal_conductivity": 12
   },
   {
     "number": 90,
@@ -4408,7 +4586,9 @@
     "molar_heat": 26.23,
     "radius_van_der_waals": null,
     "radius_covalent": 206,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 19.8,
+    "thermal_conductivity": 54
   },
   {
     "number": 91,
@@ -4447,7 +4627,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": 200,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 15.18,
+    "thermal_conductivity": 47
   },
   {
     "number": 92,
@@ -4487,7 +4669,9 @@
     "molar_heat": 27.665,
     "radius_van_der_waals": 186,
     "radius_covalent": 196,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 12.49,
+    "thermal_conductivity": 27.5
   },
   {
     "number": 93,
@@ -4526,7 +4710,9 @@
     "molar_heat": 29.46,
     "radius_van_der_waals": null,
     "radius_covalent": 190,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 11.59,
+    "thermal_conductivity": 6.3
   },
   {
     "number": 94,
@@ -4565,7 +4751,9 @@
     "molar_heat": 35.5,
     "radius_van_der_waals": null,
     "radius_covalent": 187,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 12.29,
+    "thermal_conductivity": 6.74
   },
   {
     "number": 95,
@@ -4604,7 +4792,9 @@
     "molar_heat": 62.7,
     "radius_van_der_waals": null,
     "radius_covalent": 180,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 17.63,
+    "thermal_conductivity": 10
   },
   {
     "number": 96,
@@ -4643,7 +4833,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": 169,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": 18.05,
+    "thermal_conductivity": null
   },
   {
     "number": 97,
@@ -4682,7 +4874,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": 10
   },
   {
     "number": 98,
@@ -4721,7 +4915,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 99,
@@ -4760,7 +4956,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 100,
@@ -4799,7 +4997,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 101,
@@ -4838,7 +5038,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 102,
@@ -4877,7 +5079,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 103,
@@ -4916,7 +5120,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 104,
@@ -4955,7 +5161,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 105,
@@ -4992,7 +5200,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 106,
@@ -5029,7 +5239,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 107,
@@ -5066,7 +5278,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 108,
@@ -5103,7 +5317,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 109,
@@ -5140,7 +5356,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 110,
@@ -5177,7 +5395,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 111,
@@ -5214,7 +5434,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 112,
@@ -5251,7 +5473,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 113,
@@ -5288,7 +5512,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 114,
@@ -5325,7 +5551,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 115,
@@ -5362,7 +5590,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 116,
@@ -5399,7 +5629,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 117,
@@ -5436,7 +5668,9 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   },
   {
     "number": 118,
@@ -5473,6 +5707,8 @@
     "molar_heat": null,
     "radius_van_der_waals": null,
     "radius_covalent": null,
-    "spectral_lines": null
+    "spectral_lines": null,
+    "molar_volume": null,
+    "thermal_conductivity": null
   }
 ]

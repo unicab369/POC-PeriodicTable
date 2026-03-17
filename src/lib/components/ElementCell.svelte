@@ -8,17 +8,22 @@
 		phase: Phase;
 		dimmed: boolean;
 		onclick: (element: Element) => void;
+		fillLevel?: number | null;
 	}
 
-	let { element, phase, dimmed, onclick }: Props = $props();
+	let { element, phase, dimmed, onclick, fillLevel }: Props = $props();
 
 	let categoryColor = $derived(getCategoryColor(element.category));
+	let noData = $derived(fillLevel === null);
+	let hasFill = $derived(fillLevel !== undefined && fillLevel !== null);
 	let border = $derived(phaseBorderStyle(phase));
 </script>
 
 <button
 	class="element-cell"
 	class:dimmed
+	class:no-data={noData}
+	class:has-fill={hasFill}
 	style:grid-column={element.xpos}
 	style:grid-row={element.ypos}
 	style:--category-color={categoryColor}
@@ -26,6 +31,9 @@
 	onclick={() => onclick(element)}
 	title="{element.name} ({element.symbol})"
 >
+	{#if hasFill}
+		<div class="fill-bar" style:height="{(fillLevel ?? 0) * 100}%"></div>
+	{/if}
 	<span class="number">{element.number}</span>
 	<span class="symbol">{element.symbol}</span>
 	<span class="name">{element.name}</span>
@@ -34,6 +42,7 @@
 
 <style>
 	.element-cell {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
@@ -52,6 +61,21 @@
 		color: var(--text-primary);
 		gap: 0px;
 		aspect-ratio: 1;
+		overflow: hidden;
+	}
+
+	.has-fill {
+		background: var(--bg-cell, #1a1a2e);
+	}
+
+	.fill-bar {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: var(--category-color);
+		transition: height 0.3s ease-out;
+		pointer-events: none;
 	}
 
 	.element-cell:hover {
@@ -70,17 +94,26 @@
 		opacity: 0.15;
 	}
 
+	.no-data {
+		opacity: 0.25;
+		filter: grayscale(1);
+	}
+
 	.number {
 		font-size: 0.55em;
 		opacity: 0.7;
 		line-height: 1;
 		align-self: flex-end;
+		position: relative;
+		z-index: 1;
 	}
 
 	.symbol {
 		font-size: 1.1em;
 		font-weight: 700;
 		line-height: 1.1;
+		position: relative;
+		z-index: 1;
 	}
 
 	.name {
@@ -91,11 +124,15 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		max-width: 100%;
+		position: relative;
+		z-index: 1;
 	}
 
 	.mass {
 		font-size: 0.45em;
 		opacity: 0.6;
 		line-height: 1;
+		position: relative;
+		z-index: 1;
 	}
 </style>

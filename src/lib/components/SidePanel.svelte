@@ -108,22 +108,27 @@
 						></div>
 					{/each}
 					<div class="mini-map-info">
-						<span class="mini-info-symbol" style:color={color}>{element.symbol}</span>
-						<span class="mini-info-name">{element.name}</span>
-						<span class="mini-info-meta">#{element.number} · {formatMass(element.atomic_mass)}</span>
+						<div class="mini-info-left">
+							<span class="mini-info-symbol" style:color={color}>{element.symbol}</span>
+							<span class="mini-info-name">{element.name}</span>
+						</div>
+						<div class="mini-info-right">
+							<span class="mini-info-number">#{element.number}</span>
+							<span class="mini-info-mass">{formatMass(element.atomic_mass)} u</span>
+						</div>
 					</div>
 				</div>
 				<button class="chevron chevron-up" onclick={() => navigate(0, -1)} aria-label="Navigate up">
-					<svg viewBox="0 0 16 16" width="44" height="44"><polyline points="2,10 8,4 14,10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="2,10 8,4 14,10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-down" onclick={() => navigate(0, 1)} aria-label="Navigate down">
-					<svg viewBox="0 0 16 16" width="44" height="44"><polyline points="2,6 8,12 14,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="2,6 8,12 14,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-left" onclick={() => navigate(-1, 0)} aria-label="Navigate left">
-					<svg viewBox="0 0 16 16" width="44" height="44"><polyline points="10,2 4,8 10,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="10,2 4,8 10,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-right" onclick={() => navigate(1, 0)} aria-label="Navigate right">
-					<svg viewBox="0 0 16 16" width="44" height="44"><polyline points="6,2 12,8 6,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="6,2 12,8 6,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 			</div>
 
@@ -526,30 +531,50 @@
 	}
 
 	.mini-map-info {
-		grid-column: 4 / 13;
+		grid-column: 4 / 16;
 		grid-row: 1 / 4;
 		display: none;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+		align-items: flex-end;
+		justify-content: space-between;
 		z-index: 2;
+		padding: 0.15rem 0.25rem;
+	}
+
+	.mini-info-left {
+		display: flex;
+		align-items: baseline;
+		gap: 0.35rem;
+	}
+
+	.mini-info-right {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.05rem;
 	}
 
 	.mini-info-symbol {
-		font-size: 1.4rem;
+		font-size: 2rem;
 		font-weight: 800;
 		line-height: 1;
 	}
 
 	.mini-info-name {
-		font-size: 0.6rem;
+		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
-	.mini-info-meta {
-		font-size: 0.5rem;
+	.mini-info-number {
+		font-size: 0.8rem;
+		font-weight: 600;
 		color: var(--text-secondary);
+	}
+
+	.mini-info-mass {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		opacity: 0.7;
 	}
 
 	/* Tabs */

@@ -3,15 +3,18 @@
 	import type { ElementCategory } from '../types/element';
 	import { categoryColors, categoryLabels } from '../utils/categories';
 	import ElementCell from './ElementCell.svelte';
+	import HeatmapLegend from './HeatmapLegend.svelte';
 
 	interface Props {
 		elements: Element[];
 		phases: Map<number, Phase>;
 		dimmedSet: Set<number>;
 		onselect: (element: Element) => void;
+		heatmapFills: Map<number, number | null> | null;
+		heatmapMeta: { label: string; unit: string; min: number; max: number } | null;
 	}
 
-	let { elements, phases, dimmedSet, onselect }: Props = $props();
+	let { elements, phases, dimmedSet, onselect, heatmapFills, heatmapMeta }: Props = $props();
 
 	const categories: ElementCategory[] = [
 		// Col 1: Metals       Col 2:                Col 3:
@@ -30,25 +33,35 @@
 				phase={phases.get(element.number) ?? 'Unknown'}
 				dimmed={dimmedSet.size > 0 && dimmedSet.has(element.number)}
 				onclick={onselect}
+				fillLevel={heatmapFills?.get(element.number)}
 			/>
 		{/each}
 
 		<!-- Legend in the hollow area (cols 3-12, rows 1-3) -->
 		<div class="legend-inset">
-			<div class="legend-categories">
-				{#each categories as cat}
-					<div class="legend-item">
-						<span class="swatch" style:background={categoryColors[cat]}></span>
-						<span class="legend-label">{categoryLabels[cat]}</span>
-					</div>
-				{/each}
-			</div>
-			<div class="phase-legend">
-				<span class="phase-item"><span class="phase-sample solid"></span> Solid</span>
-				<span class="phase-item"><span class="phase-sample liquid"></span> Liquid</span>
-				<span class="phase-item"><span class="phase-sample gas"></span> Gas</span>
-				<span class="phase-item"><span class="phase-sample unknown"></span> Unknown</span>
-			</div>
+			{#if heatmapMeta}
+				<HeatmapLegend
+					label={heatmapMeta.label}
+					unit={heatmapMeta.unit}
+					minValue={heatmapMeta.min}
+					maxValue={heatmapMeta.max}
+				/>
+			{:else}
+				<div class="legend-categories">
+					{#each categories as cat}
+						<div class="legend-item">
+							<span class="swatch" style:background={categoryColors[cat]}></span>
+							<span class="legend-label">{categoryLabels[cat]}</span>
+						</div>
+					{/each}
+				</div>
+				<div class="phase-legend">
+					<span class="phase-item"><span class="phase-sample solid"></span> Solid</span>
+					<span class="phase-item"><span class="phase-sample liquid"></span> Liquid</span>
+					<span class="phase-item"><span class="phase-sample gas"></span> Gas</span>
+					<span class="phase-item"><span class="phase-sample unknown"></span> Unknown</span>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Lanthanide/Actinide labels -->
