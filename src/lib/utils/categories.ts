@@ -3,14 +3,14 @@ import type { ElementCategory } from '../types/element';
 export const categoryColors: Record<ElementCategory, string> = {
 	'alkali-metal': '#c9423a',
 	'alkaline-earth-metal': '#2e9e5a',
-	'transition-metal': '#4a80cc',
+	'transition-metal': '#4088e0',
 	'post-transition-metal': '#8B4513',
 	'metalloid': '#224f88',
 	'nonmetal': '#9060cc',
 	'halogen': '#c49a1a',
 	'noble-gas': '#c45a8a',
-	'lanthanide': '#148099',
-	'actinide': '#c46a3a',
+	'lanthanide': '#1a9db5',
+	'actinide': '#e08a2e',
 	unknown: '#6b7280'
 };
 
