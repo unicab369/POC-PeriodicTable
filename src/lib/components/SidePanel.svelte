@@ -26,22 +26,28 @@
 	let allXpos = $derived([...new Set(elements.map(el => el.xpos))].sort((a, b) => a - b));
 	let allYpos = $derived([...new Set(elements.map(el => el.ypos))].sort((a, b) => a - b));
 
+	let sortedByNumber = $derived([...elements].sort((a, b) => a.number - b.number));
+
 	function navigate(dx: number, dy: number) {
 		if (!element) return;
+
+		// Horizontal: navigate by atomic number
+		if (dx !== 0) {
+			const idx = sortedByNumber.findIndex((el) => el.number === element!.number);
+			const next = sortedByNumber[(idx + dx + sortedByNumber.length) % sortedByNumber.length];
+			if (next) {
+				onnavigate(next);
+				return;
+			}
+		}
+
+		// Vertical: navigate by grid position
 		let x = element.xpos;
 		let y = element.ypos;
-
-		// Move in the given direction, wrapping and skipping empty cells
 		const maxAttempts = elements.length;
 		for (let i = 0; i < maxAttempts; i++) {
-			if (dx !== 0) {
-				const xi = allXpos.indexOf(x);
-				x = allXpos[(xi + dx + allXpos.length) % allXpos.length];
-			}
-			if (dy !== 0) {
-				const yi = allYpos.indexOf(y);
-				y = allYpos[(yi + dy + allYpos.length) % allYpos.length];
-			}
+			const yi = allYpos.indexOf(y);
+			y = allYpos[(yi + dy + allYpos.length) % allYpos.length];
 			const found = gridMap.get(`${x},${y}`);
 			if (found) {
 				onnavigate(found);
@@ -88,9 +94,11 @@
 		<!-- Left nav strip -->
 		<nav class="nav-strip">
 			<div class="nav-header">
-				<span class="nav-symbol" style:color={color}>{element.symbol}</span>
-				<span class="nav-name">{element.name}</span>
-				<div class="nav-info-right">
+				<div class="nav-row-top">
+					<span class="nav-symbol" style:color={color}>{element.symbol}</span>
+					<span class="nav-name">{element.name}</span>
+				</div>
+				<div class="nav-row-bottom">
 					<span class="nav-atomic-number">#{element.number}</span>
 					<span class="nav-atomic-mass">{formatMass(element.atomic_mass)}</span>
 				</div>
@@ -108,27 +116,27 @@
 						></div>
 					{/each}
 					<div class="mini-map-info">
-						<div class="mini-info-left">
+						<div class="mini-info-row">
 							<span class="mini-info-symbol" style:color={color}>{element.symbol}</span>
 							<span class="mini-info-name">{element.name}</span>
 						</div>
-						<div class="mini-info-right">
+						<div class="mini-info-row">
 							<span class="mini-info-number">#{element.number}</span>
 							<span class="mini-info-mass">{formatMass(element.atomic_mass)} u</span>
 						</div>
 					</div>
 				</div>
 				<button class="chevron chevron-up" onclick={() => navigate(0, -1)} aria-label="Navigate up">
-					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="2,10 8,4 14,10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="18" height="18"><polyline points="2,10 8,4 14,10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-down" onclick={() => navigate(0, 1)} aria-label="Navigate down">
-					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="2,6 8,12 14,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="18" height="18"><polyline points="2,6 8,12 14,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-left" onclick={() => navigate(-1, 0)} aria-label="Navigate left">
-					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="10,2 4,8 10,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="18" height="18"><polyline points="10,2 4,8 10,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<button class="chevron chevron-right" onclick={() => navigate(1, 0)} aria-label="Navigate right">
-					<svg viewBox="0 0 16 16" width="28" height="28"><polyline points="6,2 12,8 6,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					<svg viewBox="0 0 16 16" width="18" height="18"><polyline points="6,2 12,8 6,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 			</div>
 
@@ -409,9 +417,21 @@
 	.nav-header {
 		padding: 0.75rem 1rem;
 		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
+		flex-direction: column;
+		gap: 0.25rem;
 		border-bottom: 1px solid var(--border-color);
+	}
+
+	.nav-row-top {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	.nav-row-bottom {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
 	}
 
 	.nav-symbol {
@@ -421,7 +441,7 @@
 	}
 
 	.nav-name {
-		font-size: 0.85rem;
+		font-size: 1.15rem;
 		font-weight: 600;
 		color: var(--text-primary);
 		white-space: nowrap;
@@ -429,23 +449,14 @@
 		text-overflow: ellipsis;
 	}
 
-	.nav-info-right {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.1rem;
-		margin-left: auto;
-		align-self: flex-start;
-	}
-
 	.nav-atomic-number {
-		font-size: 0.75rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
 
 	.nav-atomic-mass {
-		font-size: 0.65rem;
+		font-size: 0.85rem;
 		color: var(--text-secondary);
 		opacity: 0.7;
 	}
@@ -534,45 +545,39 @@
 		grid-column: 4 / 16;
 		grid-row: 1 / 4;
 		display: none;
-		align-items: flex-end;
-		justify-content: space-between;
+		flex-direction: column;
+		justify-content: center;
+		gap: 0.15rem;
 		z-index: 2;
-		padding: 0.15rem 0.25rem;
+		padding: 0.15rem 0.5rem;
 	}
 
-	.mini-info-left {
+	.mini-info-row {
 		display: flex;
 		align-items: baseline;
-		gap: 0.35rem;
-	}
-
-	.mini-info-right {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.05rem;
+		gap: 0.4rem;
 	}
 
 	.mini-info-symbol {
-		font-size: 2rem;
+		font-size: 2.2rem;
 		font-weight: 800;
 		line-height: 1;
 	}
 
 	.mini-info-name {
-		font-size: 0.85rem;
+		font-size: 1.1rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
 	.mini-info-number {
-		font-size: 0.8rem;
+		font-size: 1rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
 
 	.mini-info-mass {
-		font-size: 0.7rem;
+		font-size: 0.9rem;
 		color: var(--text-secondary);
 		opacity: 0.7;
 	}

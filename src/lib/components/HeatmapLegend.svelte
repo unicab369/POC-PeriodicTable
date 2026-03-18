@@ -9,10 +9,13 @@
 	let { label, unit, minValue, maxValue }: Props = $props();
 
 	function formatValue(v: number): string {
-		if (Math.abs(v) >= 1000) return v.toFixed(0);
-		if (Math.abs(v) >= 100) return v.toFixed(1);
-		if (Math.abs(v) >= 1) return v.toFixed(2);
-		return v.toPrecision(3);
+		let s: string;
+		if (Math.abs(v) >= 1000) s = v.toFixed(0);
+		else if (Math.abs(v) >= 100) s = v.toFixed(1);
+		else if (Math.abs(v) >= 1) s = v.toFixed(2);
+		else s = v.toPrecision(3);
+		if (s.includes('.')) s = s.replace(/\.?0+$/, '');
+		return s;
 	}
 </script>
 

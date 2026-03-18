@@ -5,10 +5,9 @@
 		properties: PropertyDef[];
 		selectedKey: string | null;
 		onselect: (key: string | null) => void;
-		onclose: () => void;
 	}
 
-	let { properties, selectedKey, onselect, onclose }: Props = $props();
+	let { properties, selectedKey, onselect }: Props = $props();
 
 	function handleClick(key: string) {
 		if (key === selectedKey) {
@@ -20,9 +19,6 @@
 </script>
 
 <div class="properties-panel">
-	<div class="panel-header">
-		<span class="panel-title">Properties</span>
-	</div>
 	<div class="property-list">
 		{#each properties as prop (prop.key)}
 			<button
@@ -34,57 +30,20 @@
 			</button>
 		{/each}
 	</div>
-	<button class="close-btn" onclick={onclose} aria-label="Close properties panel">
-		Close
-	</button>
 </div>
 
 <style>
 	.properties-panel {
-		background: var(--bg-surface);
-		border: 1px solid var(--border-color);
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.75rem;
+		padding: 0 0.75rem 0.75rem;
 		overflow: hidden;
-		height: 100%;
+		flex: 1;
 		box-sizing: border-box;
 	}
 
-	.panel-header {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	.panel-title {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.close-btn {
-		background: var(--bg-cell);
-		border: 1px solid var(--border-color);
-		border-radius: 6px;
-		color: var(--text-secondary);
-		cursor: pointer;
-		padding: 0.5rem;
-		flex-shrink: 0;
-		font-size: 0.8rem;
-		font-family: inherit;
-		margin-top: 0.25rem;
-		transition: background 0.15s, color 0.15s;
-	}
-
-	.close-btn:hover {
-		color: var(--text-primary);
-		background: var(--border-color);
-	}
-
-	.property-list {
+.property-list {
 		display: flex;
 		flex-direction: column;
 		overflow-y: auto;
