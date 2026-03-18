@@ -36,6 +36,7 @@
 	let temperature = $state(298);
 	let yearFilter = $state(2024);
 	let selectedElement: Element | null = $state(null);
+	let isPortraitMode = $state(false);
 
 	// --- Range filter state ---
 	let massFilterMin = $state(massBounds.min);
@@ -54,14 +55,25 @@
 	let enabledCategories = $state(new Set(Object.keys(categoryLabels)));
 	let enabledPhases = $state(new Set(['Solid', 'Liquid', 'Gas', 'Unknown']));
 
-	// --- Active filter tracking (only one range filter at a time) ---
-	type RangeFilter = 'mass' | 'en' | 'density' | 'melt' | 'boil' | null;
-	let activeRangeFilter: RangeFilter = $state(null);
+	// --- Active filter tracking (only one filter at a time) ---
+	type ActiveFilter = 'category' | 'block' | 'phase' | 'temp' | 'year' | 'mass' | 'en' | 'density' | 'melt' | 'boil' | null;
+	let activeRangeFilter: ActiveFilter = $state(null);
 
-	function selectRangeFilter(filter: RangeFilter) {
+	function resetTempFilter() { temperature = 298; }
+	function resetYearFilter() { yearFilter = 2024; }
+	function resetCategoryFilter() { enabledCategories = new Set(Object.keys(categoryLabels)); }
+	function resetBlockFilter() { enabledBlocks = new Set(['s', 'p', 'd', 'f']); }
+	function resetPhaseFilter() { enabledPhases = new Set(['Solid', 'Liquid', 'Gas', 'Unknown']); }
+
+	function selectRangeFilter(filter: ActiveFilter) {
 		if (activeRangeFilter === filter) return;
 		// Reset the previous filter
-		if (activeRangeFilter === 'mass') resetMassFilter();
+		if (activeRangeFilter === 'category') resetCategoryFilter();
+		else if (activeRangeFilter === 'block') resetBlockFilter();
+		else if (activeRangeFilter === 'phase') resetPhaseFilter();
+		else if (activeRangeFilter === 'temp') resetTempFilter();
+		else if (activeRangeFilter === 'year') resetYearFilter();
+		else if (activeRangeFilter === 'mass') resetMassFilter();
 		else if (activeRangeFilter === 'en') resetEnFilter();
 		else if (activeRangeFilter === 'density') resetDensityFilter();
 		else if (activeRangeFilter === 'melt') resetMeltFilter();
@@ -77,20 +89,36 @@
 	let boilFilterActive = $derived(boilFilterMin > boilBounds.min || boilFilterMax < boilBounds.max);
 
 	// --- Toggle helpers (new Set for Svelte 5 reactivity) ---
+	const allBlocks = ['s', 'p', 'd', 'f'];
+	const allPhases = ['Solid', 'Liquid', 'Gas', 'Unknown'];
+	const allCategories = Object.keys(categoryLabels);
+
 	function toggleBlock(b: string) {
-		const s = new Set(enabledBlocks);
-		if (s.has(b)) s.delete(b); else s.add(b);
-		enabledBlocks = s;
+		if (enabledBlocks.size === allBlocks.length) {
+			enabledBlocks = new Set([b]);
+		} else {
+			const s = new Set(enabledBlocks);
+			if (s.has(b)) s.delete(b); else s.add(b);
+			enabledBlocks = s;
+		}
 	}
 	function toggleCategory(c: string) {
-		const s = new Set(enabledCategories);
-		if (s.has(c)) s.delete(c); else s.add(c);
-		enabledCategories = s;
+		if (enabledCategories.size === allCategories.length) {
+			enabledCategories = new Set([c]);
+		} else {
+			const s = new Set(enabledCategories);
+			if (s.has(c)) s.delete(c); else s.add(c);
+			enabledCategories = s;
+		}
 	}
 	function togglePhase(p: string) {
-		const s = new Set(enabledPhases);
-		if (s.has(p)) s.delete(p); else s.add(p);
-		enabledPhases = s;
+		if (enabledPhases.size === allPhases.length) {
+			enabledPhases = new Set([p]);
+		} else {
+			const s = new Set(enabledPhases);
+			if (s.has(p)) s.delete(p); else s.add(p);
+			enabledPhases = s;
+		}
 	}
 
 	// --- Reset helpers ---
@@ -215,6 +243,18 @@
 	let menuOpen = $state(false);
 	let menuView: 'controls' | 'properties' | 'elements' | 'filters' | 'solubility' = $state('controls');
 
+	// --- Properties bottom modal (portrait only) ---
+	let propertiesModalOpen = $state(false);
+
+	function openPropertiesPortrait() {
+		closeMenu();
+		propertiesModalOpen = true;
+	}
+
+	function closePropertiesModal() {
+		propertiesModalOpen = false;
+	}
+
 	// --- Element list state ---
 	let elementListQuery = $state('');
 
@@ -311,6 +351,14 @@
 		}
 	});
 
+	$effect(() => {
+		const mql = window.matchMedia('(orientation: portrait)');
+		isPortraitMode = mql.matches;
+		const handler = (e: MediaQueryListEvent) => { isPortraitMode = e.matches; };
+		mql.addEventListener('change', handler);
+		return () => mql.removeEventListener('change', handler);
+	});
+
 	function clampZoom(z: number): number {
 		return Math.min(Math.max(z, minZoom), maxZoom);
 	}
@@ -341,8 +389,8 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <main class="table-area" class:menu-push={menuOpen} bind:this={tableAreaEl} onwheel={handleWheel}>
-	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left">
-		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapFills : null} heatmapMeta={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
+	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top {isPortraitMode ? 'left' : 'center'}">
+		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapFills : null} heatmapMeta={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
 	</div>
 </main>
 
@@ -393,7 +441,7 @@
 							<polyline points="6,2 12,8 6,14" />
 						</svg>
 					</button>
-					<button class="menu-row" onclick={() => menuView = 'properties'}>
+					<button class="menu-row" onclick={() => isPortraitMode ? openPropertiesPortrait() : menuView = 'properties'}>
 						<span>Properties</span>
 						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<polyline points="6,2 12,8 6,14" />
@@ -473,149 +521,9 @@
 				<span class="menu-header-spacer landscape-only"></span>
 			</div>
 			<div class="filters-body">
-				<div class="slider-group">
-					<label for="temp-slider">Temperature</label>
-					<TemperatureSlider {temperature} onchange={handleTemperature} />
-				</div>
-
-				<hr class="filter-separator" />
-
-				<div class="slider-group">
-					<label for="year-slider">Year of Discovery</label>
-					<div class="year-slider">
-						<input
-							id="year-slider"
-							type="range"
-							min="1500"
-							max="2024"
-							step="1"
-							value={yearFilter}
-							oninput={handleYear}
-						/>
-						<div class="year-display">
-							<span class="year-value">{yearFilter}</span>
-							{#if yearFilter < 2024}
-								<button class="year-reset" onclick={() => yearFilter = 2024}>Reset</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Atomic Mass -->
-				<div class="slider-group" class:active-filter={activeRangeFilter === 'mass'}>
-					<div class="filter-header">
-						<label>Atomic Mass</label>
-						{#if massFilterActive}
-							<button class="year-reset" onclick={() => { resetMassFilter(); activeRangeFilter = null; }}>Reset</button>
-						{/if}
-					</div>
-					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMin} oninput={() => selectRangeFilter('mass')} />
-					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMax} oninput={() => selectRangeFilter('mass')} />
-					<div class="year-display">
-						<span class="year-value">{massFilterMin.toFixed(1)}</span>
-						<span class="range-separator">&ndash;</span>
-						<span class="year-value">{massFilterMax.toFixed(1)}</span>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Electronegativity -->
-				<div class="slider-group" class:active-filter={activeRangeFilter === 'en'}>
-					<div class="filter-header">
-						<label>Electronegativity</label>
-						{#if enFilterActive}
-							<button class="year-reset" onclick={() => { resetEnFilter(); activeRangeFilter = null; }}>Reset</button>
-						{/if}
-					</div>
-					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMin} oninput={() => selectRangeFilter('en')} />
-					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMax} oninput={() => selectRangeFilter('en')} />
-					<div class="year-display">
-						<span class="year-value">{enFilterMin.toFixed(2)}</span>
-						<span class="range-separator">&ndash;</span>
-						<span class="year-value">{enFilterMax.toFixed(2)}</span>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Density -->
-				<div class="slider-group" class:active-filter={activeRangeFilter === 'density'}>
-					<div class="filter-header">
-						<label>Density (g/cm³)</label>
-						{#if densityFilterActive}
-							<button class="year-reset" onclick={() => { resetDensityFilter(); activeRangeFilter = null; }}>Reset</button>
-						{/if}
-					</div>
-					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMin} oninput={() => selectRangeFilter('density')} />
-					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMax} oninput={() => selectRangeFilter('density')} />
-					<div class="year-display">
-						<span class="year-value">{densityFilterMin.toFixed(2)}</span>
-						<span class="range-separator">&ndash;</span>
-						<span class="year-value">{densityFilterMax.toFixed(2)}</span>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Melting Point -->
-				<div class="slider-group" class:active-filter={activeRangeFilter === 'melt'}>
-					<div class="filter-header">
-						<label>Melting Point (K)</label>
-						{#if meltFilterActive}
-							<button class="year-reset" onclick={() => { resetMeltFilter(); activeRangeFilter = null; }}>Reset</button>
-						{/if}
-					</div>
-					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMin} oninput={() => selectRangeFilter('melt')} />
-					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMax} oninput={() => selectRangeFilter('melt')} />
-					<div class="year-display">
-						<span class="year-value">{Math.round(meltFilterMin)}</span>
-						<span class="range-separator">&ndash;</span>
-						<span class="year-value">{Math.round(meltFilterMax)}</span>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Boiling Point -->
-				<div class="slider-group" class:active-filter={activeRangeFilter === 'boil'}>
-					<div class="filter-header">
-						<label>Boiling Point (K)</label>
-						{#if boilFilterActive}
-							<button class="year-reset" onclick={() => { resetBoilFilter(); activeRangeFilter = null; }}>Reset</button>
-						{/if}
-					</div>
-					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMin} oninput={() => selectRangeFilter('boil')} />
-					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMax} oninput={() => selectRangeFilter('boil')} />
-					<div class="year-display">
-						<span class="year-value">{Math.round(boilFilterMin)}</span>
-						<span class="range-separator">&ndash;</span>
-						<span class="year-value">{Math.round(boilFilterMax)}</span>
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
-				<!-- Block toggle -->
-				<div class="slider-group">
-					<label>Block</label>
-					<div class="toggle-group">
-						{#each ['s', 'p', 'd', 'f'] as b}
-							<button
-								class="toggle-btn"
-								class:active={enabledBlocks.has(b)}
-								onclick={() => toggleBlock(b)}
-							>{b}</button>
-						{/each}
-					</div>
-				</div>
-
-				<hr class="filter-separator" />
-
 				<!-- Category toggle -->
-				<div class="slider-group">
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'category'} onpointerdown={() => selectRangeFilter('category')}>
 					<label>Category</label>
 					<div class="toggle-group">
 						{#each Object.entries(categoryLabels) as [key, label]}
@@ -631,8 +539,26 @@
 
 				<hr class="filter-separator" />
 
+				<!-- Block toggle -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'block'} onpointerdown={() => selectRangeFilter('block')}>
+					<label>Block</label>
+					<div class="toggle-group">
+						{#each ['s', 'p', 'd', 'f'] as b}
+							<button
+								class="toggle-btn"
+								class:active={enabledBlocks.has(b)}
+								onclick={() => toggleBlock(b)}
+							>{b}</button>
+						{/each}
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
 				<!-- Phase toggle -->
-				<div class="slider-group">
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'phase'} onpointerdown={() => selectRangeFilter('phase')}>
 					<label>Phase</label>
 					<div class="toggle-group">
 						{#each ['Solid', 'Liquid', 'Gas', 'Unknown'] as p}
@@ -644,6 +570,140 @@
 						{/each}
 					</div>
 				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'temp'} onpointerdown={() => selectRangeFilter('temp')}>
+					<TemperatureSlider {temperature} onchange={handleTemperature} />
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'year'} onpointerdown={() => selectRangeFilter('year')}>
+					<div class="filter-header">
+						<label for="year-slider">Year of Discovery</label>
+						{#if yearFilter < 2024}
+							<button class="year-reset" onclick={() => { resetYearFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{yearFilter}</span>
+					</div>
+					<div class="year-slider">
+						<input
+							id="year-slider"
+							type="range"
+							min="1500"
+							max="2024"
+							step="1"
+							value={yearFilter}
+							oninput={handleYear}
+						/>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Atomic Mass -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'mass'} onpointerdown={() => selectRangeFilter('mass')}>
+					<div class="filter-header">
+						<label>Atomic Mass</label>
+						{#if massFilterActive}
+							<button class="year-reset" onclick={() => { resetMassFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{massFilterMin.toFixed(1)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{massFilterMax.toFixed(1)}</span>
+					</div>
+					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMin} />
+					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMax} />
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Electronegativity -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'en'} onpointerdown={() => selectRangeFilter('en')}>
+					<div class="filter-header">
+						<label>Electronegativity</label>
+						{#if enFilterActive}
+							<button class="year-reset" onclick={() => { resetEnFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{enFilterMin.toFixed(2)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{enFilterMax.toFixed(2)}</span>
+					</div>
+					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMin} />
+					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMax} />
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Density -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'density'} onpointerdown={() => selectRangeFilter('density')}>
+					<div class="filter-header">
+						<label>Density (g/cm³)</label>
+						{#if densityFilterActive}
+							<button class="year-reset" onclick={() => { resetDensityFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{densityFilterMin.toFixed(2)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{densityFilterMax.toFixed(2)}</span>
+					</div>
+					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMin} />
+					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMax} />
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Melting Point -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'melt'} onpointerdown={() => selectRangeFilter('melt')}>
+					<div class="filter-header">
+						<label>Melting Point (K)</label>
+						{#if meltFilterActive}
+							<button class="year-reset" onclick={() => { resetMeltFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{Math.round(meltFilterMin)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{Math.round(meltFilterMax)}</span>
+					</div>
+					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMin} />
+					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMax} />
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Boiling Point -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'boil'} onpointerdown={() => selectRangeFilter('boil')}>
+					<div class="filter-header">
+						<label>Boiling Point (K)</label>
+						{#if boilFilterActive}
+							<button class="year-reset" onclick={() => { resetBoilFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<div class="year-display">
+						<span class="year-value">{Math.round(boilFilterMin)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{Math.round(boilFilterMax)}</span>
+					</div>
+					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMin} />
+					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMax} />
+				</div>
+
 			</div>
 			<div class="menu-bottom-bar portrait-only">
 				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
@@ -671,15 +731,41 @@
 	</div>
 {/if}
 
+<!-- Properties bottom modal (portrait only) -->
+{#if propertiesModalOpen}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="props-modal-backdrop" onclick={closePropertiesModal}></div>
+	<div class="props-modal">
+		<div class="props-modal-header">
+			<h2>Properties</h2>
+			<button class="props-modal-close" onclick={closePropertiesModal}>
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<line x1="18" y1="6" x2="6" y2="18" />
+					<line x1="6" y1="6" x2="18" y2="18" />
+				</svg>
+			</button>
+		</div>
+		<PropertiesPanel
+			properties={PROPERTIES}
+			selectedKey={selectedPropertyKey}
+			onselect={handlePropertySelect}
+		/>
+	</div>
+{/if}
+
 <style>
 	.table-area {
 		height: 100vh;
 		overflow: auto;
 		touch-action: pan-x pan-y;
-		transition: width 0.2s ease;
+		transition: padding 0.2s ease;
 	}
 
 	@media (orientation: landscape) {
+		.table-zoom-container {
+			margin: 0 auto;
+		}
+
 		.table-area.menu-push {
 			padding-left: 220px;
 		}
@@ -730,6 +816,10 @@
 		padding: 0.5rem 0.75rem;
 		border-bottom: 1px solid var(--border-color);
 		flex-shrink: 0;
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: var(--bg-surface);
 	}
 
 	.menu-panel-header h2 {
@@ -1174,5 +1264,61 @@
 
 	.solubility-toggle:hover {
 		background: var(--border-color);
+	}
+
+	/* ── Properties bottom modal (portrait) ── */
+	.props-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 70;
+	}
+
+	.props-modal {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		z-index: 71;
+		background: var(--bg-surface);
+		border-top: 1px solid var(--border-color);
+		border-radius: 12px 12px 0 0;
+		max-height: 50vh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.props-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid var(--border-color);
+		flex-shrink: 0;
+	}
+
+	.props-modal-header h2 {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.props-modal-close {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		padding: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 4px;
+	}
+
+	.props-modal-close:hover {
+		color: var(--text-primary);
+		background: var(--bg-cell);
 	}
 </style>

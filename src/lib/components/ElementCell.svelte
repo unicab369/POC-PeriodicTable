@@ -52,7 +52,7 @@
 		min-width: 0;
 		min-height: 0;
 		background: var(--category-color);
-		border-radius: 2px;
+		border-radius: 0;
 		cursor: pointer;
 		transition:
 			opacity 0.2s,
