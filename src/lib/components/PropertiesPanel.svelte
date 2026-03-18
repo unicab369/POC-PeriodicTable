@@ -85,5 +85,10 @@
 		.property-list {
 			overflow-y: auto;
 		}
+
+		.property-chip {
+			font-size: 1.8rem;
+			padding: 1.25rem 1rem;
+		}
 	}
 </style>

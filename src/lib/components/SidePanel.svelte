@@ -284,10 +284,40 @@
 					<h3>Electron Configuration</h3>
 					<p class="mono">{element.electron_configuration_semantic}</p>
 					<p class="mono small">{element.electron_configuration}</p>
-				</div>
 
-				<div class="section">
-					<h3>Electron Shells</h3>
+					<!-- Animated Bohr model diagram -->
+					<div class="bohr-diagram">
+						<svg viewBox="-110 -110 220 220" class="bohr-svg">
+							<!-- Nucleus -->
+							<circle cx="0" cy="0" r="8" fill={color} opacity="0.8" />
+							<text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="white" font-size="6" font-weight="700">{element.symbol}</text>
+
+							<!-- Shells and electrons -->
+							{#each element.shells as count, i}
+								{@const radius = 20 + i * (85 / element.shells.length)}
+								{@const duration = 8 + i * 4}
+								{@const direction = i % 2 === 0 ? 1 : -1}
+
+								<!-- Shell orbit ring -->
+								<circle cx="0" cy="0" r={radius} fill="none" stroke="var(--text-secondary)" stroke-width="1" opacity="0.7" />
+
+								<!-- Electrons on this shell -->
+								<g class="electron-orbit" style:animation-duration="{duration}s" style:animation-direction={direction < 0 ? 'reverse' : 'normal'}>
+									{#each Array(count) as _, j}
+										{@const angle = (j / count) * 360}
+										<circle
+											cx={radius * Math.cos(angle * Math.PI / 180)}
+											cy={radius * Math.sin(angle * Math.PI / 180)}
+											r="3"
+											fill="#00b4d8"
+											opacity="0.9"
+										/>
+									{/each}
+								</g>
+							{/each}
+						</svg>
+					</div>
+
 					<div class="shells">
 						{#each element.shells as count}
 							<span class="shell">{count}</span>
@@ -379,13 +409,9 @@
 		</div>
 	</div>
 
-	<!-- Close FAB -->
-	<button class="close-fab" onclick={onclose} aria-label="Close details">
-		<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-			<line x1="18" y1="6" x2="6" y2="18" />
-			<line x1="6" y1="6" x2="18" y2="18" />
-		</svg>
-	</button>
+	<div class="detail-close-bar">
+		<button class="detail-close-btn" onclick={onclose}>Close</button>
+	</div>
 {/if}
 
 <style>
@@ -393,7 +419,7 @@
 	.overlay {
 		position: fixed;
 		inset: 0;
-		z-index: 35;
+		z-index: 60;
 		display: flex;
 		background: var(--bg-surface);
 	}
@@ -721,6 +747,29 @@
 		margin-top: 0.25rem;
 	}
 
+	.bohr-diagram {
+		display: flex;
+		justify-content: center;
+		padding: 1rem 0;
+	}
+
+	.bohr-svg {
+		width: 200px;
+		height: 200px;
+	}
+
+	.electron-orbit {
+		transform-origin: 0 0;
+		animation-name: orbit;
+		animation-timing-function: linear;
+		animation-iteration-count: infinite;
+	}
+
+	@keyframes orbit {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+
 	.shells {
 		display: flex;
 		gap: 0.3rem;
@@ -863,29 +912,34 @@
 		padding: 0 2px;
 	}
 
-	/* ── Close FAB ── */
-	.close-fab {
+	/* ── Close bar ── */
+	.detail-close-bar {
 		position: fixed;
-		bottom: 1.25rem;
-		left: 1.25rem;
-		z-index: 50;
-		width: 60px;
-		height: 60px;
-		border-radius: 50%;
-		border: 2px solid var(--text-secondary);
-		background: var(--bg-cell);
-		color: #fff;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-		transition: background 0.15s, border-color 0.15s;
+		bottom: 0;
+		left: 0;
+		width: 200px;
+		z-index: 65;
+		padding: 0.75rem;
+		background: var(--bg-surface);
+		border-top: 1px solid var(--border-color);
 	}
 
-	.close-fab:hover {
+	.detail-close-btn {
+		width: 100%;
+		padding: 0.6rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		background: var(--bg-cell);
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-family: inherit;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.detail-close-btn:hover {
 		background: var(--border-color);
-		border-color: var(--text-primary);
+		color: var(--text-primary);
 	}
 
 	/* ── Vertical / portrait layout ── */
@@ -940,7 +994,12 @@
 
 		.content {
 			padding: 1.25rem 1rem;
+			padding-bottom: 4rem;
 			max-width: none;
+		}
+
+		.detail-close-bar {
+			width: 100%;
 		}
 	}
 </style>

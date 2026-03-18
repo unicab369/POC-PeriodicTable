@@ -4,6 +4,7 @@
 	import { categoryColors, categoryLabels } from '../utils/categories';
 	import ElementCell from './ElementCell.svelte';
 	import HeatmapLegend from './HeatmapLegend.svelte';
+	import SolubilityLegend from './SolubilityLegend.svelte';
 
 	interface Props {
 		elements: Element[];
@@ -12,9 +13,10 @@
 		onselect: (element: Element) => void;
 		heatmapFills: Map<number, number | null> | null;
 		heatmapMeta: { label: string; unit: string; min: number; max: number } | null;
+		solubilityColors: Map<number, string> | null;
 	}
 
-	let { elements, phases, dimmedSet, onselect, heatmapFills, heatmapMeta }: Props = $props();
+	let { elements, phases, dimmedSet, onselect, heatmapFills, heatmapMeta, solubilityColors = null }: Props = $props();
 
 	const categories: ElementCategory[] = [
 		// Col 1: Metals       Col 2:                Col 3:
@@ -34,6 +36,7 @@
 				dimmed={dimmedSet.size > 0 && dimmedSet.has(element.number)}
 				onclick={onselect}
 				fillLevel={heatmapFills?.get(element.number)}
+				colorOverride={solubilityColors?.get(element.number) ?? null}
 			/>
 		{/each}
 
@@ -46,6 +49,8 @@
 					minValue={heatmapMeta.min}
 					maxValue={heatmapMeta.max}
 				/>
+			{:else if solubilityColors}
+				<SolubilityLegend />
 			{:else}
 				<div class="legend-categories">
 					{#each categories as cat}

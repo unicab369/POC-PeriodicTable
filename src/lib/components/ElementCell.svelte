@@ -9,11 +9,12 @@
 		dimmed: boolean;
 		onclick: (element: Element) => void;
 		fillLevel?: number | null;
+		colorOverride?: string | null;
 	}
 
-	let { element, phase, dimmed, onclick, fillLevel }: Props = $props();
+	let { element, phase, dimmed, onclick, fillLevel, colorOverride }: Props = $props();
 
-	let categoryColor = $derived(getCategoryColor(element.category));
+	let categoryColor = $derived(colorOverride ?? getCategoryColor(element.category));
 	let noData = $derived(fillLevel === null);
 	let hasFill = $derived(fillLevel !== undefined && fillLevel !== null);
 	let border = $derived(phaseBorderStyle(phase));

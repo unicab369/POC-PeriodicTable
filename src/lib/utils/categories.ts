@@ -5,7 +5,7 @@ export const categoryColors: Record<ElementCategory, string> = {
 	'alkaline-earth-metal': '#c48a20',
 	'transition-metal': '#4a80cc',
 	'post-transition-metal': '#2e9e5a',
-	'metalloid': '#1fa898',
+	'metalloid': '#8db830',
 	'nonmetal': '#c49a1a',
 	'halogen': '#9060cc',
 	'noble-gas': '#c45a8a',

@@ -7,14 +7,82 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import TemperatureSlider from '$lib/components/TemperatureSlider.svelte';
 	import PropertiesPanel from '$lib/components/PropertiesPanel.svelte';
-	import { getCategoryColor } from '$lib/utils/categories';
+	import { getCategoryColor, categoryLabels, categoryColors } from '$lib/utils/categories';
+	import { getSolubilityColor } from '$lib/utils/solubility';
 	import elementsData from '$lib/data/elements.json';
 
 	const elements: Element[] = elementsData as Element[];
 
-	let searchQuery = $state('');
+	function computeBounds(accessor: (el: Element) => number | null): { min: number; max: number } {
+		let min = Infinity;
+		let max = -Infinity;
+		for (const el of elements) {
+			const v = accessor(el);
+			if (v != null) {
+				if (v < min) min = v;
+				if (v > max) max = v;
+			}
+		}
+		return { min, max };
+	}
+
+	const massBounds = computeBounds((el) => el.atomic_mass);
+	const enBounds = computeBounds((el) => el.electronegativity_pauling);
+	const densityBounds = computeBounds((el) => el.density);
+	const meltBounds = computeBounds((el) => el.melt);
+	const boilBounds = computeBounds((el) => el.boil);
+
 	let temperature = $state(298);
+	let yearFilter = $state(2024);
 	let selectedElement: Element | null = $state(null);
+
+	// --- Range filter state ---
+	let massFilterMin = $state(massBounds.min);
+	let massFilterMax = $state(massBounds.max);
+	let enFilterMin = $state(enBounds.min);
+	let enFilterMax = $state(enBounds.max);
+	let densityFilterMin = $state(densityBounds.min);
+	let densityFilterMax = $state(densityBounds.max);
+	let meltFilterMin = $state(meltBounds.min);
+	let meltFilterMax = $state(meltBounds.max);
+	let boilFilterMin = $state(boilBounds.min);
+	let boilFilterMax = $state(boilBounds.max);
+
+	// --- Toggle filter state ---
+	let enabledBlocks = $state(new Set(['s', 'p', 'd', 'f']));
+	let enabledCategories = $state(new Set(Object.keys(categoryLabels)));
+	let enabledPhases = $state(new Set(['Solid', 'Liquid', 'Gas', 'Unknown']));
+
+	// --- Derived active flags ---
+	let massFilterActive = $derived(massFilterMin > massBounds.min || massFilterMax < massBounds.max);
+	let enFilterActive = $derived(enFilterMin > enBounds.min || enFilterMax < enBounds.max);
+	let densityFilterActive = $derived(densityFilterMin > densityBounds.min || densityFilterMax < densityBounds.max);
+	let meltFilterActive = $derived(meltFilterMin > meltBounds.min || meltFilterMax < meltBounds.max);
+	let boilFilterActive = $derived(boilFilterMin > boilBounds.min || boilFilterMax < boilBounds.max);
+
+	// --- Toggle helpers (new Set for Svelte 5 reactivity) ---
+	function toggleBlock(b: string) {
+		const s = new Set(enabledBlocks);
+		if (s.has(b)) s.delete(b); else s.add(b);
+		enabledBlocks = s;
+	}
+	function toggleCategory(c: string) {
+		const s = new Set(enabledCategories);
+		if (s.has(c)) s.delete(c); else s.add(c);
+		enabledCategories = s;
+	}
+	function togglePhase(p: string) {
+		const s = new Set(enabledPhases);
+		if (s.has(p)) s.delete(p); else s.add(p);
+		enabledPhases = s;
+	}
+
+	// --- Reset helpers ---
+	function resetMassFilter() { massFilterMin = massBounds.min; massFilterMax = massBounds.max; }
+	function resetEnFilter() { enFilterMin = enBounds.min; enFilterMax = enBounds.max; }
+	function resetDensityFilter() { densityFilterMin = densityBounds.min; densityFilterMax = densityBounds.max; }
+	function resetMeltFilter() { meltFilterMin = meltBounds.min; meltFilterMax = meltBounds.max; }
+	function resetBoilFilter() { boilFilterMin = boilBounds.min; boilFilterMax = boilBounds.max; }
 
 	// --- Properties heatmap state ---
 	let selectedPropertyKey: string | null = $state('atomic_radius');
@@ -34,6 +102,18 @@
 		return { label: selectedProperty.label, unit: selectedProperty.unit, min: range.min, max: range.max };
 	});
 
+	// --- Solubility state ---
+	let solubilityActive = $state(false);
+
+	let solubilityColorMap = $derived.by(() => {
+		if (!solubilityActive) return null;
+		const map = new Map<number, string>();
+		for (const el of elements) {
+			map.set(el.number, getSolubilityColor(el.number));
+		}
+		return map;
+	});
+
 	let phases = $derived.by(() => {
 		const map = new Map<number, Phase>();
 		for (const el of elements) {
@@ -43,25 +123,48 @@
 	});
 
 	let dimmedSet = $derived.by(() => {
-		const q = searchQuery.trim().toLowerCase();
-		if (!q) return new Set<number>();
-
-		const matched = new Set<number>();
-		for (const el of elements) {
-			if (
-				el.name.toLowerCase().includes(q) ||
-				el.symbol.toLowerCase().includes(q) ||
-				String(el.number) === q
-			) {
-				matched.add(el.number);
-			}
-		}
-
-		// Return set of elements that should be dimmed (NOT matching)
 		const dimmed = new Set<number>();
 		for (const el of elements) {
-			if (!matched.has(el.number)) {
-				dimmed.add(el.number);
+			// Year filter
+			if (yearFilter < 2024) {
+				const year = el.year_discovered;
+				if (year !== 'Ancient' && year !== null && typeof year === 'number' && year > yearFilter) {
+					dimmed.add(el.number);
+					continue;
+				}
+			}
+			// Atomic mass range
+			if (el.atomic_mass < massFilterMin || el.atomic_mass > massFilterMax) {
+				dimmed.add(el.number); continue;
+			}
+			// Electronegativity range (null = pass)
+			if (el.electronegativity_pauling != null && (el.electronegativity_pauling < enFilterMin || el.electronegativity_pauling > enFilterMax)) {
+				dimmed.add(el.number); continue;
+			}
+			// Density range (null = pass)
+			if (el.density != null && (el.density < densityFilterMin || el.density > densityFilterMax)) {
+				dimmed.add(el.number); continue;
+			}
+			// Melting point range (null = pass)
+			if (el.melt != null && (el.melt < meltFilterMin || el.melt > meltFilterMax)) {
+				dimmed.add(el.number); continue;
+			}
+			// Boiling point range (null = pass)
+			if (el.boil != null && (el.boil < boilFilterMin || el.boil > boilFilterMax)) {
+				dimmed.add(el.number); continue;
+			}
+			// Block toggle
+			if (!enabledBlocks.has(el.block)) {
+				dimmed.add(el.number); continue;
+			}
+			// Category toggle
+			if (!enabledCategories.has(el.category)) {
+				dimmed.add(el.number); continue;
+			}
+			// Phase toggle (reacts to temperature)
+			const phase = phases.get(el.number) ?? 'Unknown';
+			if (!enabledPhases.has(phase)) {
+				dimmed.add(el.number); continue;
 			}
 		}
 		return dimmed;
@@ -84,17 +187,17 @@
 		selectedPropertyKey = key;
 	}
 
-function handleSearch(value: string) {
-		searchQuery = value;
-	}
-
 	function handleTemperature(value: number) {
 		temperature = value;
 	}
 
+	function handleYear(e: Event) {
+		yearFilter = Number((e.target as HTMLInputElement).value);
+	}
+
 	// --- Menu popup ---
 	let menuOpen = $state(false);
-	let menuView: 'controls' | 'properties' | 'elements' = $state('controls');
+	let menuView: 'controls' | 'properties' | 'elements' | 'filters' | 'solubility' = $state('controls');
 
 	// --- Element list state ---
 	let elementListQuery = $state('');
@@ -217,7 +320,7 @@ function handleSearch(value: string) {
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <main class="table-area" bind:this={tableAreaEl} onwheel={handleWheel}>
 	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left">
-		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={menuOpen && menuView === 'properties' ? heatmapFills : null} heatmapMeta={menuOpen && menuView === 'properties' ? heatmapMeta : null} />
+		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapFills : null} heatmapMeta={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
 	</div>
 </main>
 
@@ -230,16 +333,8 @@ function handleSearch(value: string) {
 	onnavigate={handleSelect}
 />
 
-{#if selectedElement}
-	<!-- FAB close button for detail view -->
-	<button class="fab" onclick={handleCloseDetail} aria-label="Close element details">
-		<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-			<line x1="18" y1="6" x2="6" y2="18" />
-			<line x1="6" y1="6" x2="18" y2="18" />
-		</svg>
-	</button>
-{:else}
-	<!-- FAB hamburger button -->
+<!-- FAB hamburger button -->
+{#if !selectedElement}
 	<button class="fab" onclick={toggleMenu} aria-label="Open controls menu">
 		<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 			{#if menuOpen}
@@ -259,22 +354,16 @@ function handleSearch(value: string) {
 	<div class="menu-panel">
 		{#if menuView === 'controls'}
 			<div class="menu-panel-header">
-				<button class="menu-close-btn" onclick={closeMenu} aria-label="Close menu">
+				<button class="menu-close-btn landscape-only" onclick={closeMenu} aria-label="Close menu">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 						<line x1="18" y1="6" x2="6" y2="18" />
 						<line x1="6" y1="6" x2="18" y2="18" />
 					</svg>
 				</button>
 				<h2>Menu</h2>
-				<span class="menu-header-spacer"></span>
+				<span class="menu-header-spacer landscape-only"></span>
 			</div>
 			<div class="menu-body">
-				<div class="menu-section">
-					<SearchBar value={searchQuery} oninput={handleSearch} />
-				</div>
-				<div class="menu-section">
-					<TemperatureSlider {temperature} onchange={handleTemperature} />
-				</div>
 				<div class="menu-section">
 					<button class="menu-row" onclick={() => menuView = 'elements'}>
 						<span>Element List</span>
@@ -288,44 +377,126 @@ function handleSearch(value: string) {
 							<polyline points="6,2 12,8 6,14" />
 						</svg>
 					</button>
+					<button class="menu-row" onclick={() => menuView = 'filters'}>
+						<span>Filters</span>
+						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6,2 12,8 6,14" />
+						</svg>
+					</button>
+					<button class="menu-row" onclick={() => { solubilityActive = !solubilityActive; menuView = 'solubility'; }}>
+						<span>Solubility</span>
+						{#if solubilityActive}
+							<span class="menu-row-badge">Active</span>
+						{/if}
+						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6,2 12,8 6,14" />
+						</svg>
+					</button>
 				</div>
+			</div>
+			<div class="menu-bottom-bar portrait-only">
+				<button class="menu-bottom-btn" onclick={closeMenu}>Close</button>
 			</div>
 		{:else if menuView === 'properties'}
 			<div class="menu-panel-header">
-				<button class="menu-back-btn" onclick={() => menuView = 'controls'} aria-label="Back to controls">
+				<button class="menu-back-btn landscape-only" onclick={() => menuView = 'controls'} aria-label="Back to controls">
 					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="10,2 4,8 10,14" />
 					</svg>
 				</button>
 				<h2>Properties</h2>
-				<span></span>
+				<span class="landscape-only"></span>
 			</div>
 			<PropertiesPanel
 				properties={PROPERTIES}
 				selectedKey={selectedPropertyKey}
 				onselect={handlePropertySelect}
 			/>
+			<div class="menu-bottom-bar portrait-only">
+				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
+			</div>
 		{:else if menuView === 'elements'}
 			<div class="menu-panel-header">
-				<button class="menu-back-btn" onclick={() => { menuView = 'controls'; elementListQuery = ''; }} aria-label="Back to controls">
+				<button class="menu-back-btn landscape-only" onclick={() => { menuView = 'controls'; elementListQuery = ''; }} aria-label="Back to controls">
 					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="10,2 4,8 10,14" />
 					</svg>
 				</button>
 				<h2>Element List</h2>
-				<span class="menu-header-spacer"></span>
+				<span class="menu-header-spacer landscape-only"></span>
 			</div>
 			<div class="element-list-search">
 				<SearchBar value={elementListQuery} oninput={(v) => elementListQuery = v} />
 			</div>
 			<div class="element-list">
 				{#each filteredElements as el (el.number)}
-					<button class="element-list-item" onclick={() => { handleSelect(el); closeMenu(); }}>
+					<button class="element-list-item" onclick={() => handleSelect(el)}>
 						<span class="element-list-symbol" style:color={getCategoryColor(el.category)}>{el.symbol}</span>
 						<span class="element-list-name">{el.name}</span>
 						<span class="element-list-number">{el.number}</span>
 					</button>
 				{/each}
+			</div>
+			<div class="menu-bottom-bar portrait-only">
+				<button class="menu-bottom-btn" onclick={() => { menuView = 'controls'; elementListQuery = ''; }}>Back</button>
+			</div>
+		{:else if menuView === 'filters'}
+			<div class="menu-panel-header">
+				<button class="menu-back-btn landscape-only" onclick={() => menuView = 'controls'} aria-label="Back to controls">
+					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="10,2 4,8 10,14" />
+					</svg>
+				</button>
+				<h2>Filters</h2>
+				<span class="menu-header-spacer landscape-only"></span>
+			</div>
+			<div class="filters-body">
+				<div class="slider-group">
+					<label for="temp-slider">Temperature</label>
+					<TemperatureSlider {temperature} onchange={handleTemperature} />
+				</div>
+				<div class="slider-group">
+					<label for="year-slider">Year of Discovery</label>
+					<div class="year-slider">
+						<input
+							id="year-slider"
+							type="range"
+							min="1500"
+							max="2024"
+							step="1"
+							value={yearFilter}
+							oninput={handleYear}
+						/>
+						<div class="year-display">
+							<span class="year-value">{yearFilter}</span>
+							{#if yearFilter < 2024}
+								<button class="year-reset" onclick={() => yearFilter = 2024}>Reset</button>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="menu-bottom-bar portrait-only">
+				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
+			</div>
+		{:else if menuView === 'solubility'}
+			<div class="menu-panel-header">
+				<button class="menu-back-btn landscape-only" onclick={() => menuView = 'controls'} aria-label="Back to controls">
+					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="10,2 4,8 10,14" />
+					</svg>
+				</button>
+				<h2>Solubility</h2>
+				<span class="menu-header-spacer landscape-only"></span>
+			</div>
+			<div class="solubility-body">
+				<p class="solubility-desc">Elements colored by their water solubility behavior.</p>
+				<button class="solubility-toggle" onclick={() => solubilityActive = !solubilityActive}>
+					{solubilityActive ? 'Disable' : 'Enable'} Solubility View
+				</button>
+			</div>
+			<div class="menu-bottom-bar portrait-only">
+				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
 			</div>
 		{/if}
 	</div>
@@ -440,6 +611,92 @@ function handleSearch(value: string) {
 		.menu-panel {
 			inset: 0;
 		}
+
+		.menu-panel-header {
+			justify-content: center;
+			padding: 0.75rem 1rem;
+		}
+
+		.menu-panel-header h2 {
+			font-size: 1.15rem;
+		}
+
+		.menu-bottom-bar {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: var(--bg-surface);
+			z-index: 56;
+		}
+
+
+		.slider-group > label {
+			font-size: 1.7rem;
+		}
+
+		.year-value {
+			font-size: 1.8rem;
+		}
+
+		.year-reset {
+			font-size: 1.5rem;
+		}
+
+		.solubility-desc {
+			font-size: 1.7rem;
+		}
+
+		.solubility-toggle {
+			font-size: 1.7rem;
+		}
+
+		.menu-body,
+		.filters-body,
+		.element-list {
+			padding-bottom: 4rem;
+		}
+
+		.landscape-only {
+			display: none !important;
+		}
+	}
+
+	@media (orientation: landscape) {
+		.portrait-only {
+			display: none !important;
+		}
+	}
+
+	.menu-bottom-bar {
+		flex-shrink: 0;
+		padding: 0.75rem;
+		border-top: 1px solid var(--border-color);
+	}
+
+	.menu-bottom-btn {
+		width: 100%;
+		padding: 0.6rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		background: var(--bg-cell);
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-family: inherit;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.menu-bottom-btn:hover {
+		background: var(--border-color);
+		color: var(--text-primary);
+	}
+
+	@media (orientation: portrait) {
+		.menu-bottom-btn {
+			font-size: 1.2rem;
+			padding: 0.85rem;
+		}
 	}
 
 	.menu-row {
@@ -474,6 +731,17 @@ function handleSearch(value: string) {
 		font-size: 0.75rem;
 		color: #00b4d8;
 		opacity: 0.8;
+	}
+
+	@media (orientation: portrait) {
+		.menu-row {
+			font-size: 2.0rem;
+			padding: 1.25rem 1rem;
+		}
+
+		.menu-row-badge {
+			font-size: 1.5rem;
+		}
 	}
 
 	.menu-back-btn {
@@ -547,6 +815,110 @@ function handleSearch(value: string) {
 		color: var(--text-secondary);
 		font-size: 0.8rem;
 		flex-shrink: 0;
+	}
+
+	@media (orientation: portrait) {
+		.element-list-item {
+			font-size: 2.5rem;
+			padding: 1.5rem 1.25rem;
+		}
+
+		.element-list-symbol {
+			font-size: 2.8rem;
+			width: 4rem;
+		}
+
+		.element-list-number {
+			font-size: 2rem;
+		}
+	}
+
+	.filters-body {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		padding: 1.25rem;
+	}
+
+	.slider-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.slider-group > label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.year-slider {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.year-slider input[type='range'] {
+		width: 100%;
+		accent-color: #6eb5ff;
+		cursor: pointer;
+	}
+
+	.year-display {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.year-value {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.year-reset {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.75rem;
+		font-family: inherit;
+		text-decoration: underline;
+		padding: 0;
+	}
+
+	.year-reset:hover {
+		color: var(--text-primary);
+	}
+
+	.solubility-body {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1.25rem;
+	}
+
+	.solubility-desc {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		line-height: 1.4;
+	}
+
+	.solubility-toggle {
+		padding: 0.6rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		background: var(--bg-cell);
+		color: var(--text-primary);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-family: inherit;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.solubility-toggle:hover {
+		background: var(--border-color);
 	}
 
 </style>
