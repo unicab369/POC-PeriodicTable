@@ -94,11 +94,9 @@
 
 	.periodic-table {
 		display: grid;
-		grid-template-columns: repeat(18, minmax(3.2rem, 1fr));
-		grid-template-rows: repeat(7, minmax(3.2rem, 1fr)) 1.5rem repeat(2, minmax(3.2rem, 1fr));
+		grid-template-columns: repeat(18, 3.2rem);
+		grid-template-rows: repeat(7, 3.2rem) 1.5rem repeat(2, 3.2rem);
 		gap: 0px;
-		min-width: 700px;
-		max-width: 1200px;
 		margin: 0 auto;
 	}
 
@@ -128,14 +126,14 @@
 
 	.swatch {
 		display: inline-block;
-		width: 12px;
-		height: 12px;
+		width: 18px;
+		height: 18px;
 		border-radius: 2px;
 		flex-shrink: 0;
 	}
 
 	.legend-label {
-		font-size: 0.85em;
+		font-size: 1.1em;
 		color: var(--text-secondary);
 		white-space: nowrap;
 	}
@@ -150,15 +148,15 @@
 	.phase-item {
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
-		font-size: 0.8em;
+		gap: 0.35rem;
+		font-size: 1.1em;
 		color: var(--text-secondary);
 	}
 
 	.phase-sample {
 		display: inline-block;
-		width: 12px;
-		height: 12px;
+		width: 18px;
+		height: 18px;
 		border-radius: 2px;
 		background: var(--bg-cell);
 	}
@@ -168,7 +166,20 @@
 	}
 
 	.phase-sample.liquid {
-		border: 1px double var(--text-secondary);
+		border: 1px solid var(--text-secondary);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.phase-sample.liquid::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		width: 40%;
+		height: 40%;
+		background: rgba(255, 255, 255, 0.8);
+		clip-path: polygon(100% 0, 100% 100%, 0 100%);
 	}
 
 	.phase-sample.gas {

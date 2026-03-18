@@ -18,6 +18,7 @@
 	let noData = $derived(fillLevel === null);
 	let hasFill = $derived(fillLevel !== undefined && fillLevel !== null);
 	let border = $derived(phaseBorderStyle(phase));
+	let isLiquid = $derived(phase === 'Liquid');
 </script>
 
 <button
@@ -25,6 +26,7 @@
 	class:dimmed
 	class:no-data={noData}
 	class:has-fill={hasFill}
+	class:liquid={isLiquid}
 	style:grid-column={element.xpos}
 	style:grid-row={element.ypos}
 	style:--category-color={categoryColor}
@@ -35,20 +37,20 @@
 	{#if hasFill}
 		<div class="fill-bar" style:height="{(fillLevel ?? 0) * 100}%"></div>
 	{/if}
-	<span class="number">{element.number}</span>
-	<span class="symbol">{element.symbol}</span>
-	<span class="name">{element.name}</span>
-	<span class="mass">{element.atomic_mass.toFixed(element.atomic_mass < 10 ? 3 : 2)}</span>
+	<div class="cell-inner">
+		<span class="number">{element.number}</span>
+		<span class="symbol">{element.symbol}</span>
+		<div class="bottom-info">
+			<span class="name">{element.name}</span>
+			<span class="mass">{element.atomic_mass.toFixed(element.atomic_mass < 10 ? 3 : 2)}</span>
+		</div>
+	</div>
 </button>
 
 <style>
 	.element-cell {
 		position: relative;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		justify-content: center;
-		padding: 2px;
+		padding: 0;
 		min-width: 0;
 		min-height: 0;
 		background: var(--category-color);
@@ -60,9 +62,9 @@
 			background 0.2s;
 		font-family: inherit;
 		color: var(--text-primary);
-		gap: 0px;
 		aspect-ratio: 1;
 		overflow: hidden;
+		text-align: left;
 	}
 
 	.has-fill {
@@ -77,6 +79,12 @@
 		background: var(--category-color);
 		transition: height 0.3s ease-out;
 		pointer-events: none;
+	}
+
+	.cell-inner {
+		position: absolute;
+		inset: 2px;
+		container-type: inline-size;
 	}
 
 	.element-cell:hover {
@@ -100,41 +108,60 @@
 		filter: grayscale(1);
 	}
 
+	.liquid::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		width: 15%;
+		height: 15%;
+		background: rgba(255, 255, 255, 0.8);
+		clip-path: polygon(100% 0, 100% 100%, 0 100%);
+		z-index: 2;
+		pointer-events: none;
+	}
+
 	.number {
-		font-size: 0.55em;
+		font-size: 20cqi;
 		opacity: 0.7;
 		line-height: 1;
-		align-self: flex-end;
-		position: relative;
-		z-index: 1;
+		position: absolute;
+		top: 0;
+		right: 0;
 	}
 
 	.symbol {
-		font-size: 1.1em;
+		font-size: 34cqi;
 		font-weight: 700;
 		line-height: 1.1;
-		position: relative;
-		z-index: 1;
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.bottom-info {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.name {
-		font-size: 0.45em;
+		font-size: 16cqi;
 		opacity: 0.8;
-		line-height: 1;
+		line-height: 1.1;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		max-width: 100%;
-		position: relative;
-		z-index: 1;
 	}
 
 	.mass {
-		font-size: 0.45em;
+		font-size: 16cqi;
 		opacity: 0.6;
-		line-height: 1;
-		position: relative;
-		z-index: 1;
+		line-height: 1.1;
 	}
 
 </style>

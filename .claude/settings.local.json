@@ -24,7 +24,9 @@
       "Bash(npm run dev:*)",
       "WebFetch(domain:api.wikimedia.org)",
       "WebFetch(domain:www.mediawiki.org)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(npm i:*)"
     ]
   }
 }
