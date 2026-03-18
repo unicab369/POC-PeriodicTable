@@ -8,6 +8,9 @@ node_modules
 /.svelte-kit
 /build
 
+# Claude Code
+.claude/settings.local.json
+
 # OS
 .DS_Store
 Thumbs.db
