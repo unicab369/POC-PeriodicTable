@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Element, Phase } from '../types/element';
 	import { getCategoryColor, categoryLabels } from '../utils/categories';
+	import { browser } from '$app/environment';
 
 	interface Props {
 		element: Element | null;
@@ -56,16 +57,59 @@
 		}
 	}
 
-	let activeTab: 'general' | 'details' = $state('general');
-	let prevElementNumber: number | null = $state(null);
+	type TabType = 'general' | 'details' | 'wiki';
+
+	let activeTab: TabType = $state(
+		(browser && localStorage.getItem('detail-tab') as TabType) || 'general'
+	);
+
+	let isLandscape = $state(false);
 
 	$effect(() => {
-		if (element && element.number !== prevElementNumber) {
-			activeTab = 'general';
-			prevElementNumber = element.number;
+		const mql = window.matchMedia('(orientation: landscape)');
+		isLandscape = mql.matches;
+		const handler = (e: MediaQueryListEvent) => { isLandscape = e.matches; };
+		mql.addEventListener('change', handler);
+		return () => mql.removeEventListener('change', handler);
+	});
+
+	// In portrait, fall back from wiki to general
+	let effectiveTab = $derived(activeTab === 'wiki' && !isLandscape ? 'general' : activeTab);
+
+	$effect(() => {
+		localStorage.setItem('detail-tab', activeTab);
+	});
+
+	// --- Wiki fetch ---
+	let wikiHtml = $state('');
+	let wikiLoading = $state(false);
+	let wikiError: string | null = $state(null);
+
+	async function fetchWiki(name: string) {
+		wikiLoading = true;
+		wikiError = null;
+		wikiHtml = '';
+		try {
+			const r = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&format=json&origin=*&page=${encodeURIComponent(name)}&prop=text&disableeditsection=true&disabletoc=true`);
+			if (!r.ok) throw new Error(`HTTP ${r.status}`);
+			const data = await r.json();
+			wikiHtml = data.parse?.text?.['*'] ?? '';
+		} catch {
+			wikiError = 'Failed to load Wikipedia content';
 		}
-		if (!element) {
-			prevElementNumber = null;
+		wikiLoading = false;
+	}
+
+	// Derived key that changes when element or tab changes
+	let wikiKey = $derived(effectiveTab === 'wiki' && element ? element.name : null);
+	let lastWikiKey: string | null = null;
+
+	$effect(() => {
+		if (wikiKey && wikiKey !== lastWikiKey) {
+			lastWikiKey = wikiKey;
+			fetchWiki(wikiKey);
+		} else if (!wikiKey) {
+			lastWikiKey = null;
 		}
 	});
 
@@ -143,24 +187,33 @@
 			<div class="tabs">
 				<button
 					class="tab-btn"
-					class:active={activeTab === 'general'}
+					class:active={effectiveTab === 'general'}
 					onclick={() => (activeTab = 'general')}
 				>
 					General
 				</button>
 				<button
 					class="tab-btn"
-					class:active={activeTab === 'details'}
+					class:active={effectiveTab === 'details'}
 					onclick={() => (activeTab = 'details')}
 				>
 					Details
 				</button>
+				{#if isLandscape}
+					<button
+						class="tab-btn"
+						class:active={effectiveTab === 'wiki'}
+						onclick={() => (activeTab = 'wiki')}
+					>
+						Wiki
+					</button>
+				{/if}
 			</div>
 		</nav>
 
 		<!-- Content area -->
 		<div class="content">
-			{#if activeTab === 'general'}
+			{#if effectiveTab === 'general'}
 				<div class="particle-row">
 					<div class="particle"><span class="particle-count">{element.number}</span><span class="particle-label">Protons</span></div>
 					<div class="particle"><span class="particle-count">{element.number}</span><span class="particle-label">Electrons</span></div>
@@ -213,7 +266,7 @@
 					</div>
 				{/if}
 
-			{:else}
+			{:else if effectiveTab === 'details'}
 				<div class="section">
 					<h3>Physical Properties</h3>
 					<div class="prop-grid">
@@ -286,37 +339,44 @@
 					<p class="mono small">{element.electron_configuration}</p>
 
 					<!-- Animated Bohr model diagram -->
-					<div class="bohr-diagram">
-						<svg viewBox="-110 -110 220 220" class="bohr-svg">
-							<!-- Nucleus -->
-							<circle cx="0" cy="0" r="8" fill={color} opacity="0.8" />
-							<text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="white" font-size="6" font-weight="700">{element.symbol}</text>
+					{#if element.shells.length > 0}
+						{@const maxShellRadius = element.shells.length <= 1 ? 40 : 20 + (element.shells.length - 1) * (85 / element.shells.length)}
+						{@const viewExtent = maxShellRadius + 10}
+						{@const nucleusR = Math.max(5, 12 - element.shells.length)}
+						{@const nucleusFontSize = Math.max(4, 9 - element.shells.length)}
+						<div class="bohr-diagram">
+							<svg viewBox="{-viewExtent} {-viewExtent} {viewExtent * 2} {viewExtent * 2}" class="bohr-svg">
+								<!-- Nucleus -->
+								<circle cx="0" cy="0" r={nucleusR} fill={color} opacity="0.8" />
+								<text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="white" font-size={nucleusFontSize} font-weight="700">{element.symbol}</text>
 
-							<!-- Shells and electrons -->
-							{#each element.shells as count, i}
-								{@const radius = 20 + i * (85 / element.shells.length)}
-								{@const duration = 8 + i * 4}
-								{@const direction = i % 2 === 0 ? 1 : -1}
+								<!-- Shells and electrons -->
+								{#each element.shells as count, i}
+									{@const radius = element.shells.length <= 1 ? 40 : 20 + i * (85 / element.shells.length)}
+									{@const duration = 8 + i * 4}
+									{@const direction = i % 2 === 0 ? 1 : -1}
+									{@const dotR = Math.min(4, viewExtent * 0.06)}
 
-								<!-- Shell orbit ring -->
-								<circle cx="0" cy="0" r={radius} fill="none" stroke="var(--text-secondary)" stroke-width="1" opacity="0.7" />
+									<!-- Shell orbit ring -->
+									<circle cx="0" cy="0" r={radius} fill="none" stroke="var(--text-secondary)" stroke-width="1" opacity="0.7" />
 
-								<!-- Electrons on this shell -->
-								<g class="electron-orbit" style:animation-duration="{duration}s" style:animation-direction={direction < 0 ? 'reverse' : 'normal'}>
-									{#each Array(count) as _, j}
-										{@const angle = (j / count) * 360}
-										<circle
-											cx={radius * Math.cos(angle * Math.PI / 180)}
-											cy={radius * Math.sin(angle * Math.PI / 180)}
-											r="3"
-											fill="#00b4d8"
-											opacity="0.9"
-										/>
-									{/each}
-								</g>
-							{/each}
-						</svg>
-					</div>
+									<!-- Electrons on this shell -->
+									<g class="electron-orbit" style:animation-duration="{duration}s" style:animation-direction={direction < 0 ? 'reverse' : 'normal'}>
+										{#each Array(count) as _, j}
+											{@const angle = (j / count) * 360}
+											<circle
+												cx={radius * Math.cos(angle * Math.PI / 180)}
+												cy={radius * Math.sin(angle * Math.PI / 180)}
+												r={dotR}
+												fill="#00b4d8"
+												opacity="0.9"
+											/>
+										{/each}
+									</g>
+								{/each}
+							</svg>
+						</div>
+					{/if}
 
 					<div class="shells">
 						{#each element.shells as count}
@@ -405,7 +465,28 @@
 					</div>
 				{/if}
 
+				{:else if effectiveTab === 'wiki'}
+				{#if wikiLoading}
+					<div class="wiki-status">Loading Wikipedia article...</div>
+				{:else if wikiError}
+					<div class="wiki-status">{wikiError}</div>
+				{:else}
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div class="wiki-content" onclick={(e) => {
+						const a = (e.target as HTMLElement).closest('a');
+						if (!a) return;
+						e.preventDefault();
+						const raw = a.getAttribute('href') || '';
+						const url = raw.startsWith('/wiki/') ? 'https://en.wikipedia.org' + raw
+							: raw.startsWith('#') ? null
+							: raw.startsWith('//') ? 'https:' + raw
+							: raw;
+						if (url) window.open(url, '_blank');
+					}}>
+						{@html wikiHtml}
+					</div>
 				{/if}
+			{/if}
 		</div>
 	</div>
 
@@ -645,7 +726,6 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 0 2.5rem 3rem;
-		max-width: 640px;
 	}
 
 	/* General tab */
@@ -1009,5 +1089,109 @@
 		.detail-close-bar {
 			width: 100%;
 		}
+	}
+
+	/* ── Wiki tab ── */
+	.wiki-status {
+		padding: 2rem;
+		text-align: center;
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+	}
+
+	.wiki-content {
+		padding: 1.5rem 0;
+		font-size: 0.9rem;
+		line-height: 1.7;
+		color: var(--text-primary);
+	}
+
+	.wiki-content :global(a) {
+		color: #4dabf7;
+		text-decoration: none;
+	}
+
+	.wiki-content :global(a:hover) {
+		text-decoration: underline;
+	}
+
+	.wiki-content :global(h2),
+	.wiki-content :global(h3),
+	.wiki-content :global(h4) {
+		color: var(--text-primary);
+		margin: 1.5rem 0 0.5rem;
+		font-size: 1rem;
+	}
+
+	.wiki-content :global(h2) {
+		font-size: 1.1rem;
+		border-bottom: 1px solid var(--border-color);
+		padding-bottom: 0.3rem;
+	}
+
+	.wiki-content :global(p) {
+		margin: 0.5rem 0;
+	}
+
+	.wiki-content :global(table) {
+		border-collapse: collapse;
+		width: 100%;
+		margin: 0.75rem 0;
+		font-size: 0.8rem;
+	}
+
+	.wiki-content :global(th),
+	.wiki-content :global(td) {
+		border: 1px solid var(--border-color);
+		padding: 0.35rem 0.5rem;
+		text-align: left;
+	}
+
+	.wiki-content :global(th) {
+		background: var(--bg-cell);
+	}
+
+	.wiki-content :global(img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: 4px;
+	}
+
+	.wiki-content :global(ul),
+	.wiki-content :global(ol) {
+		padding-left: 1.25rem;
+		margin: 0.5rem 0;
+	}
+
+	.wiki-content :global(li) {
+		margin: 0.2rem 0;
+	}
+
+	.wiki-content :global(.mw-empty-elt),
+	.wiki-content :global(.mw-editsection),
+	.wiki-content :global(.noprint),
+	.wiki-content :global(.sistersitebox),
+	.wiki-content :global(.portalbox) {
+		display: none;
+	}
+
+	.wiki-content :global(.infobox) {
+		float: right;
+		max-width: 280px;
+		margin: 0 0 1rem 1rem;
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		background: var(--bg-cell);
+		font-size: 0.8rem;
+	}
+
+	.wiki-content :global(.reflist),
+	.wiki-content :global(.references),
+	.wiki-content :global(.navbox),
+	.wiki-content :global(.navbox-styles),
+	.wiki-content :global(.catlinks),
+	.wiki-content :global(.authority-control),
+	.wiki-content :global(.mw-references-wrap) {
+		display: none;
 	}
 </style>

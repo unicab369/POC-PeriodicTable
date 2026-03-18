@@ -10,6 +10,10 @@
 	import PropertiesPanel from '$lib/components/PropertiesPanel.svelte';
 	import { getCategoryColor, categoryLabels, categoryColors } from '$lib/utils/categories';
 	import { getSolubilityColor } from '$lib/utils/solubility';
+	import { getAcidBaseColor } from '$lib/utils/acid-strength';
+	import SolubilityTable from '$lib/components/SolubilityTable.svelte';
+	import RawTable from '$lib/components/RawTable.svelte';
+	import AcidBaseTable from '$lib/components/AcidBaseTable.svelte';
 	import elementsData from '$lib/data/elements.json';
 
 	const elements: Element[] = elementsData as Element[];
@@ -65,6 +69,20 @@
 	function resetBlockFilter() { enabledBlocks = new Set(['s', 'p', 'd', 'f']); }
 	function resetPhaseFilter() { enabledPhases = new Set(['Solid', 'Liquid', 'Gas', 'Unknown']); }
 
+	function resetAllFilters() {
+		resetCategoryFilter();
+		resetBlockFilter();
+		resetPhaseFilter();
+		resetTempFilter();
+		resetYearFilter();
+		resetMassFilter();
+		resetEnFilter();
+		resetDensityFilter();
+		resetMeltFilter();
+		resetBoilFilter();
+		activeRangeFilter = null;
+	}
+
 	function selectRangeFilter(filter: ActiveFilter) {
 		if (activeRangeFilter === filter) return;
 		// Reset the previous filter
@@ -94,30 +112,24 @@
 	const allCategories = Object.keys(categoryLabels);
 
 	function toggleBlock(b: string) {
-		if (enabledBlocks.size === allBlocks.length) {
-			enabledBlocks = new Set([b]);
+		if (enabledBlocks.size === 1 && enabledBlocks.has(b)) {
+			enabledBlocks = new Set(allBlocks);
 		} else {
-			const s = new Set(enabledBlocks);
-			if (s.has(b)) s.delete(b); else s.add(b);
-			enabledBlocks = s;
+			enabledBlocks = new Set([b]);
 		}
 	}
 	function toggleCategory(c: string) {
-		if (enabledCategories.size === allCategories.length) {
-			enabledCategories = new Set([c]);
+		if (enabledCategories.size === 1 && enabledCategories.has(c)) {
+			enabledCategories = new Set(allCategories);
 		} else {
-			const s = new Set(enabledCategories);
-			if (s.has(c)) s.delete(c); else s.add(c);
-			enabledCategories = s;
+			enabledCategories = new Set([c]);
 		}
 	}
 	function togglePhase(p: string) {
-		if (enabledPhases.size === allPhases.length) {
-			enabledPhases = new Set([p]);
+		if (enabledPhases.size === 1 && enabledPhases.has(p)) {
+			enabledPhases = new Set(allPhases);
 		} else {
-			const s = new Set(enabledPhases);
-			if (s.has(p)) s.delete(p); else s.add(p);
-			enabledPhases = s;
+			enabledPhases = new Set([p]);
 		}
 	}
 
@@ -157,6 +169,21 @@
 		}
 		return map;
 	});
+
+	// --- Acid strength state ---
+	let acidStrengthActive = $state(false);
+
+	let acidStrengthColorMap = $derived.by(() => {
+		if (!acidStrengthActive) return null;
+		const map = new Map<number, string>();
+		for (const el of elements) {
+			map.set(el.number, getAcidBaseColor(el.number));
+		}
+		return map;
+	});
+
+	// Only one overlay active at a time
+	let overlayColorMap = $derived(acidStrengthActive ? acidStrengthColorMap : solubilityColorMap);
 
 	let phases = $derived.by(() => {
 		const map = new Map<number, Phase>();
@@ -243,6 +270,15 @@
 	let menuOpen = $state(false);
 	let menuView: 'controls' | 'properties' | 'elements' | 'filters' | 'solubility' = $state('controls');
 
+	// --- Solubility table overlay ---
+	let solubilityTableOpen = $state(false);
+
+	// --- Raw data table overlay ---
+	let rawTableOpen = $state(false);
+
+	// --- Acid/Base table overlay ---
+	let acidBaseTableOpen = $state(false);
+
 	// --- Properties bottom modal (portrait only) ---
 	let propertiesModalOpen = $state(false);
 
@@ -253,6 +289,18 @@
 
 	function closePropertiesModal() {
 		propertiesModalOpen = false;
+	}
+
+	// --- Filters bottom modal (portrait only) ---
+	let filtersModalOpen = $state(false);
+
+	function openFiltersPortrait() {
+		closeMenu();
+		filtersModalOpen = true;
+	}
+
+	function closeFiltersModal() {
+		filtersModalOpen = false;
 	}
 
 	// --- Element list state ---
@@ -287,6 +335,8 @@
 	let tableAreaEl: HTMLElement | undefined = $state();
 	let zoomContainerEl: HTMLElement | undefined = $state();
 	let lastIsPortrait: boolean | null = $state(null);
+	let naturalWidth = $state(0);
+	let naturalHeight = $state(0);
 
 	function computeZoomBounds() {
 		if (!tableAreaEl || !zoomContainerEl) return;
@@ -294,10 +344,16 @@
 		const areaWidth = tableAreaEl.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
 		const areaHeight = tableAreaEl.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
 		const savedTransform = zoomContainerEl.style.transform;
+		const savedMarginBottom = zoomContainerEl.style.marginBottom;
+		const savedMarginRight = zoomContainerEl.style.marginRight;
 		zoomContainerEl.style.transform = 'scale(1)';
-		const naturalWidth = zoomContainerEl.scrollWidth;
-		const naturalHeight = zoomContainerEl.scrollHeight;
+		zoomContainerEl.style.marginBottom = '0px';
+		zoomContainerEl.style.marginRight = '0px';
+		naturalWidth = zoomContainerEl.scrollWidth;
+		naturalHeight = zoomContainerEl.scrollHeight;
 		zoomContainerEl.style.transform = savedTransform;
+		zoomContainerEl.style.marginBottom = savedMarginBottom;
+		zoomContainerEl.style.marginRight = savedMarginRight;
 		if (naturalWidth > 0 && naturalHeight > 0) {
 			const fitWidth = areaWidth / naturalWidth;
 			const fitHeight = areaHeight / naturalHeight;
@@ -338,16 +394,17 @@
 	});
 
 	$effect(() => {
-		// When menu opens/closes in landscape, snap zoom to fit the new available width
+		// When menu opens in landscape, zoom all the way out after padding transition
 		void menuOpen;
 		if (tableAreaEl && zoomContainerEl) {
-			requestAnimationFrame(() => {
+			// Recompute after the 200ms padding transition completes
+			setTimeout(() => {
 				computeZoomBounds();
 				const isPortrait = tableAreaEl!.clientHeight > tableAreaEl!.clientWidth;
-				if (!isPortrait) {
+				if (!isPortrait && menuOpen) {
 					tableZoom = minZoom;
 				}
-			});
+			}, 220);
 		}
 	});
 
@@ -389,8 +446,8 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <main class="table-area" class:menu-push={menuOpen} bind:this={tableAreaEl} onwheel={handleWheel}>
-	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top {isPortraitMode ? 'left' : 'center'}">
-		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapFills : null} heatmapMeta={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
+	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left" style:margin-bottom="{-(naturalHeight * (1 - tableZoom))}px" style:margin-right="{-(naturalWidth * (1 - tableZoom))}px">
+		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive && !acidStrengthActive ? heatmapFills : null} heatmapMeta={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive && !acidStrengthActive ? heatmapMeta : null} solubilityColors={overlayColorMap} />
 	</div>
 </main>
 
@@ -447,17 +504,26 @@
 							<polyline points="6,2 12,8 6,14" />
 						</svg>
 					</button>
-					<button class="menu-row" onclick={() => menuView = 'filters'}>
+					<button class="menu-row" onclick={() => isPortraitMode ? openFiltersPortrait() : menuView = 'filters'}>
 						<span>Filters</span>
 						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<polyline points="6,2 12,8 6,14" />
 						</svg>
 					</button>
-					<button class="menu-row" onclick={() => { solubilityActive = !solubilityActive; menuView = 'solubility'; }}>
+					<button class="menu-row" onclick={() => { solubilityActive = true; acidStrengthActive = false; menuView = 'solubility'; }}>
 						<span>Solubility</span>
-						{#if solubilityActive}
-							<span class="menu-row-badge">Active</span>
-						{/if}
+						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6,2 12,8 6,14" />
+						</svg>
+					</button>
+					<button class="menu-row" onclick={() => { acidBaseTableOpen = true; }}>
+						<span>Acids & Bases</span>
+						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6,2 12,8 6,14" />
+						</svg>
+					</button>
+					<button class="menu-row" onclick={() => { rawTableOpen = true; }}>
+						<span>Raw Table</span>
 						<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<polyline points="6,2 12,8 6,14" />
 						</svg>
@@ -512,7 +578,7 @@
 			</div>
 		{:else if menuView === 'filters'}
 			<div class="menu-panel-header">
-				<button class="menu-back-btn landscape-only" onclick={() => menuView = 'controls'} aria-label="Back to controls">
+				<button class="menu-back-btn landscape-only" onclick={() => { resetAllFilters(); menuView = 'controls'; }} aria-label="Back to controls">
 					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="10,2 4,8 10,14" />
 					</svg>
@@ -706,11 +772,11 @@
 
 			</div>
 			<div class="menu-bottom-bar portrait-only">
-				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
+				<button class="menu-bottom-btn" onclick={() => { resetAllFilters(); menuView = 'controls'; }}>Back</button>
 			</div>
 		{:else if menuView === 'solubility'}
 			<div class="menu-panel-header">
-				<button class="menu-back-btn landscape-only" onclick={() => menuView = 'controls'} aria-label="Back to controls">
+				<button class="menu-back-btn landscape-only" onclick={() => { solubilityActive = false; menuView = 'controls'; }} aria-label="Back to controls">
 					<svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="10,2 4,8 10,14" />
 					</svg>
@@ -720,12 +786,12 @@
 			</div>
 			<div class="solubility-body">
 				<p class="solubility-desc">Elements colored by their water solubility behavior.</p>
-				<button class="solubility-toggle" onclick={() => solubilityActive = !solubilityActive}>
-					{solubilityActive ? 'Disable' : 'Enable'} Solubility View
+				<button class="solubility-toggle" onclick={() => { solubilityTableOpen = true; }}>
+					View Compound Solubility Table
 				</button>
 			</div>
 			<div class="menu-bottom-bar portrait-only">
-				<button class="menu-bottom-btn" onclick={() => menuView = 'controls'}>Back</button>
+				<button class="menu-bottom-btn" onclick={() => { solubilityActive = false; menuView = 'controls'; }}>Back</button>
 			</div>
 		{/if}
 	</div>
@@ -733,10 +799,9 @@
 
 <!-- Properties bottom modal (portrait only) -->
 {#if propertiesModalOpen}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="props-modal-backdrop" onclick={closePropertiesModal}></div>
 	<div class="props-modal">
 		<div class="props-modal-header">
+			<span class="props-modal-spacer"></span>
 			<h2>Properties</h2>
 			<button class="props-modal-close" onclick={closePropertiesModal}>
 				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -753,6 +818,18 @@
 	</div>
 {/if}
 
+{#if solubilityTableOpen}
+	<SolubilityTable onclose={() => solubilityTableOpen = false} />
+{/if}
+
+{#if rawTableOpen}
+	<RawTable {elements} onclose={() => rawTableOpen = false} />
+{/if}
+
+{#if acidBaseTableOpen}
+	<AcidBaseTable onclose={() => acidBaseTableOpen = false} />
+{/if}
+
 <style>
 	.table-area {
 		height: 100vh;
@@ -762,10 +839,6 @@
 	}
 
 	@media (orientation: landscape) {
-		.table-zoom-container {
-			margin: 0 auto;
-		}
-
 		.table-area.menu-push {
 			padding-left: 220px;
 		}
@@ -1267,13 +1340,6 @@
 	}
 
 	/* ── Properties bottom modal (portrait) ── */
-	.props-modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 70;
-	}
-
 	.props-modal {
 		position: fixed;
 		bottom: 0;
@@ -1283,26 +1349,31 @@
 		background: var(--bg-surface);
 		border-top: 1px solid var(--border-color);
 		border-radius: 12px 12px 0 0;
-		max-height: 50vh;
+		max-height: 40vh;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
 	}
 
 	.props-modal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 0.75rem;
 		border-bottom: 1px solid var(--border-color);
 		flex-shrink: 0;
 	}
 
 	.props-modal-header h2 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: 0.95rem;
 		font-weight: 600;
 		color: var(--text-primary);
+	}
+
+	.props-modal-spacer {
+		width: 28px;
 	}
 
 	.props-modal-close {
@@ -1320,5 +1391,141 @@
 	.props-modal-close:hover {
 		color: var(--text-primary);
 		background: var(--bg-cell);
+	}
+
+	.props-modal :global(.property-chip) {
+		font-size: 1.2rem;
+		padding: 0.75rem 0.75rem;
+	}
+
+	/* ── Acid Strength view ── */
+	.acid-body {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1.25rem;
+		overflow-y: auto;
+	}
+
+	.acid-legend {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.acid-legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.acid-legend-swatch {
+		width: 14px;
+		height: 14px;
+		border-radius: 3px;
+		flex-shrink: 0;
+	}
+
+	.acid-legend-label {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.acid-list-heading {
+		margin: 0.5rem 0 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.acid-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding-bottom: 2rem;
+	}
+
+	.acid-list-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.5rem;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.acid-item-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.acid-formula {
+		font-weight: 700;
+		font-size: 0.9rem;
+		color: var(--text-primary);
+	}
+
+	.acid-strength-badge {
+		font-size: 0.7rem;
+		padding: 0.15rem 0.45rem;
+		border-radius: 999px;
+		background: rgba(244, 162, 97, 0.2);
+		color: #f4a261;
+	}
+
+	.acid-strength-badge.strong {
+		background: rgba(230, 57, 70, 0.2);
+		color: #e63946;
+	}
+
+	.acid-item-bottom {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.acid-name {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.acid-pka {
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+	}
+
+	@media (orientation: portrait) {
+		.acid-legend-label {
+			font-size: 1.5rem;
+		}
+
+		.acid-legend-swatch {
+			width: 22px;
+			height: 22px;
+		}
+
+		.acid-list-heading {
+			font-size: 1.7rem;
+		}
+
+		.acid-formula {
+			font-size: 1.7rem;
+		}
+
+		.acid-strength-badge {
+			font-size: 1.3rem;
+		}
+
+		.acid-name {
+			font-size: 1.5rem;
+		}
+
+		.acid-pka {
+			font-size: 1.4rem;
+		}
+
+		.acid-body {
+			padding-bottom: 4rem;
+		}
 	}
 </style>
