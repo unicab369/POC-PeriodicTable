@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Element, Phase } from '../types/element';
 	import { getCategoryColor, categoryLabels } from '../utils/categories';
-	import { browser } from '$app/environment';
+	const browser = typeof window !== 'undefined';
 
 	interface Props {
 		element: Element | null;
