@@ -131,12 +131,12 @@
 	}
 
 	.symbol {
-		font-size: 34cqi;
+		font-size: 52cqi;
 		font-weight: 700;
 		line-height: 1.1;
 		position: absolute;
 		left: 0;
-		top: 50%;
+		top: calc(50% - 4px);
 		transform: translateY(-50%);
 	}
 
