@@ -96,7 +96,7 @@
 		display: grid;
 		grid-template-columns: repeat(18, minmax(3.2rem, 1fr));
 		grid-template-rows: repeat(7, minmax(3.2rem, 1fr)) 1.5rem repeat(2, minmax(3.2rem, 1fr));
-		gap: 1px;
+		gap: 0px;
 		min-width: 700px;
 		max-width: 1200px;
 		margin: 0 auto;

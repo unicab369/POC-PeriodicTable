@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Element, Phase } from '$lib/types/element';
+	import type { ElementCategory } from '$lib/types/element';
 	import { getPhaseAtTemperature } from '$lib/utils/element-helpers';
 	import { PROPERTIES, computeHeatmapFills, computeHeatmapRange } from '$lib/utils/heatmap';
 	import PeriodicTable from '$lib/components/PeriodicTable.svelte';
@@ -52,6 +53,21 @@
 	let enabledBlocks = $state(new Set(['s', 'p', 'd', 'f']));
 	let enabledCategories = $state(new Set(Object.keys(categoryLabels)));
 	let enabledPhases = $state(new Set(['Solid', 'Liquid', 'Gas', 'Unknown']));
+
+	// --- Active filter tracking (only one range filter at a time) ---
+	type RangeFilter = 'mass' | 'en' | 'density' | 'melt' | 'boil' | null;
+	let activeRangeFilter: RangeFilter = $state(null);
+
+	function selectRangeFilter(filter: RangeFilter) {
+		if (activeRangeFilter === filter) return;
+		// Reset the previous filter
+		if (activeRangeFilter === 'mass') resetMassFilter();
+		else if (activeRangeFilter === 'en') resetEnFilter();
+		else if (activeRangeFilter === 'density') resetDensityFilter();
+		else if (activeRangeFilter === 'melt') resetMeltFilter();
+		else if (activeRangeFilter === 'boil') resetBoilFilter();
+		activeRangeFilter = filter;
+	}
 
 	// --- Derived active flags ---
 	let massFilterActive = $derived(massFilterMin > massBounds.min || massFilterMax < massBounds.max);
@@ -234,9 +250,9 @@
 
 	function computeZoomBounds() {
 		if (!tableAreaEl || !zoomContainerEl) return;
-		const areaWidth = tableAreaEl.clientWidth;
-		const areaHeight = tableAreaEl.clientHeight;
-		// Measure the table's natural size at scale=1
+		const style = getComputedStyle(tableAreaEl);
+		const areaWidth = tableAreaEl.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		const areaHeight = tableAreaEl.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
 		const savedTransform = zoomContainerEl.style.transform;
 		zoomContainerEl.style.transform = 'scale(1)';
 		const naturalWidth = zoomContainerEl.scrollWidth;
@@ -246,31 +262,23 @@
 			const fitWidth = areaWidth / naturalWidth;
 			const fitHeight = areaHeight / naturalHeight;
 			const isPortrait = areaHeight > areaWidth;
-			// Min zoom: in portrait, fit table height (allow horizontal scroll);
-			// in landscape, fit the most constraining axis
 			minZoom = isPortrait
 				? Math.min(fitHeight, 1)
 				: Math.min(fitWidth, fitHeight, 1);
-			// Max zoom: in portrait, cap so table height fills area.
-			// In landscape, cap at half the table width fitting the viewport.
 			maxZoom = isPortrait ? Math.max(fitHeight, minZoom) : Math.max(fitWidth * 2, minZoom);
 
-			// Detect orientation change
 			const orientationChanged = lastIsPortrait !== null && lastIsPortrait !== isPortrait;
 			lastIsPortrait = isPortrait;
 
 			if (orientationChanged) {
 				if (isPortrait) {
-					// Switching to vertical: max zoom, scroll to left
 					tableZoom = maxZoom;
 					tableAreaEl.scrollLeft = 0;
 				} else {
-					// Switching to horizontal: min zoom (fit everything)
 					tableZoom = minZoom;
 					tableAreaEl.scrollLeft = 0;
 				}
 			} else {
-				// Normal clamp
 				tableZoom = Math.min(Math.max(tableZoom, minZoom), maxZoom);
 			}
 		}
@@ -286,6 +294,20 @@
 	$effect(() => {
 		if (zoomContainerEl && tableAreaEl) {
 			requestAnimationFrame(() => computeZoomBounds());
+		}
+	});
+
+	$effect(() => {
+		// When menu opens/closes in landscape, snap zoom to fit the new available width
+		void menuOpen;
+		if (tableAreaEl && zoomContainerEl) {
+			requestAnimationFrame(() => {
+				computeZoomBounds();
+				const isPortrait = tableAreaEl!.clientHeight > tableAreaEl!.clientWidth;
+				if (!isPortrait) {
+					tableZoom = minZoom;
+				}
+			});
 		}
 	});
 
@@ -318,7 +340,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<main class="table-area" bind:this={tableAreaEl} onwheel={handleWheel}>
+<main class="table-area" class:menu-push={menuOpen} bind:this={tableAreaEl} onwheel={handleWheel}>
 	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left">
 		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapFills : null} heatmapMeta={menuOpen && menuView === 'properties' && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
 	</div>
@@ -455,6 +477,9 @@
 					<label for="temp-slider">Temperature</label>
 					<TemperatureSlider {temperature} onchange={handleTemperature} />
 				</div>
+
+				<hr class="filter-separator" />
+
 				<div class="slider-group">
 					<label for="year-slider">Year of Discovery</label>
 					<div class="year-slider">
@@ -473,6 +498,150 @@
 								<button class="year-reset" onclick={() => yearFilter = 2024}>Reset</button>
 							{/if}
 						</div>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Atomic Mass -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'mass'}>
+					<div class="filter-header">
+						<label>Atomic Mass</label>
+						{#if massFilterActive}
+							<button class="year-reset" onclick={() => { resetMassFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMin} oninput={() => selectRangeFilter('mass')} />
+					<input type="range" min={massBounds.min} max={massBounds.max} step="0.1" bind:value={massFilterMax} oninput={() => selectRangeFilter('mass')} />
+					<div class="year-display">
+						<span class="year-value">{massFilterMin.toFixed(1)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{massFilterMax.toFixed(1)}</span>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Electronegativity -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'en'}>
+					<div class="filter-header">
+						<label>Electronegativity</label>
+						{#if enFilterActive}
+							<button class="year-reset" onclick={() => { resetEnFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMin} oninput={() => selectRangeFilter('en')} />
+					<input type="range" min={enBounds.min} max={enBounds.max} step="0.01" bind:value={enFilterMax} oninput={() => selectRangeFilter('en')} />
+					<div class="year-display">
+						<span class="year-value">{enFilterMin.toFixed(2)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{enFilterMax.toFixed(2)}</span>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Density -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'density'}>
+					<div class="filter-header">
+						<label>Density (g/cm³)</label>
+						{#if densityFilterActive}
+							<button class="year-reset" onclick={() => { resetDensityFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMin} oninput={() => selectRangeFilter('density')} />
+					<input type="range" min={densityBounds.min} max={densityBounds.max} step="0.01" bind:value={densityFilterMax} oninput={() => selectRangeFilter('density')} />
+					<div class="year-display">
+						<span class="year-value">{densityFilterMin.toFixed(2)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{densityFilterMax.toFixed(2)}</span>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Melting Point -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'melt'}>
+					<div class="filter-header">
+						<label>Melting Point (K)</label>
+						{#if meltFilterActive}
+							<button class="year-reset" onclick={() => { resetMeltFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMin} oninput={() => selectRangeFilter('melt')} />
+					<input type="range" min={meltBounds.min} max={meltBounds.max} step="1" bind:value={meltFilterMax} oninput={() => selectRangeFilter('melt')} />
+					<div class="year-display">
+						<span class="year-value">{Math.round(meltFilterMin)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{Math.round(meltFilterMax)}</span>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Boiling Point -->
+				<div class="slider-group" class:active-filter={activeRangeFilter === 'boil'}>
+					<div class="filter-header">
+						<label>Boiling Point (K)</label>
+						{#if boilFilterActive}
+							<button class="year-reset" onclick={() => { resetBoilFilter(); activeRangeFilter = null; }}>Reset</button>
+						{/if}
+					</div>
+					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMin} oninput={() => selectRangeFilter('boil')} />
+					<input type="range" min={boilBounds.min} max={boilBounds.max} step="1" bind:value={boilFilterMax} oninput={() => selectRangeFilter('boil')} />
+					<div class="year-display">
+						<span class="year-value">{Math.round(boilFilterMin)}</span>
+						<span class="range-separator">&ndash;</span>
+						<span class="year-value">{Math.round(boilFilterMax)}</span>
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Block toggle -->
+				<div class="slider-group">
+					<label>Block</label>
+					<div class="toggle-group">
+						{#each ['s', 'p', 'd', 'f'] as b}
+							<button
+								class="toggle-btn"
+								class:active={enabledBlocks.has(b)}
+								onclick={() => toggleBlock(b)}
+							>{b}</button>
+						{/each}
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Category toggle -->
+				<div class="slider-group">
+					<label>Category</label>
+					<div class="toggle-group">
+						{#each Object.entries(categoryLabels) as [key, label]}
+							<button
+								class="toggle-btn"
+								class:active={enabledCategories.has(key)}
+								style:border-color={categoryColors[key as ElementCategory]}
+								onclick={() => toggleCategory(key)}
+							>{label}</button>
+						{/each}
+					</div>
+				</div>
+
+				<hr class="filter-separator" />
+
+				<!-- Phase toggle -->
+				<div class="slider-group">
+					<label>Phase</label>
+					<div class="toggle-group">
+						{#each ['Solid', 'Liquid', 'Gas', 'Unknown'] as p}
+							<button
+								class="toggle-btn"
+								class:active={enabledPhases.has(p)}
+								onclick={() => togglePhase(p)}
+							>{p}</button>
+						{/each}
 					</div>
 				</div>
 			</div>
@@ -507,6 +676,13 @@
 		height: 100vh;
 		overflow: auto;
 		touch-action: pan-x pan-y;
+		transition: width 0.2s ease;
+	}
+
+	@media (orientation: landscape) {
+		.table-area.menu-push {
+			padding-left: 220px;
+		}
 	}
 
 	.table-zoom-container {
@@ -630,8 +806,11 @@
 			z-index: 56;
 		}
 
-
 		.slider-group > label {
+			font-size: 1.7rem;
+		}
+
+		.filter-header label {
 			font-size: 1.7rem;
 		}
 
@@ -649,6 +828,15 @@
 
 		.solubility-toggle {
 			font-size: 1.7rem;
+		}
+
+		.toggle-btn {
+			font-size: 1.4rem;
+			padding: 0.5rem 0.75rem;
+		}
+
+		.range-separator {
+			font-size: 1.5rem;
 		}
 
 		.menu-body,
@@ -694,8 +882,8 @@
 
 	@media (orientation: portrait) {
 		.menu-bottom-btn {
-			font-size: 1.2rem;
-			padding: 0.85rem;
+			font-size: 1.1rem;
+			padding: 0.75rem;
 		}
 	}
 
@@ -840,16 +1028,54 @@
 		padding: 1.25rem;
 	}
 
+	.filter-separator {
+		border: none;
+		border-top: 1px solid var(--border-color);
+		margin: 0;
+	}
+
+	.filter-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.filter-header label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.range-separator {
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+	}
+
 	.slider-group {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		padding: 0.5rem;
+		border-radius: 6px;
+		border: 1px solid transparent;
+		transition: border-color 0.2s, background 0.2s;
+	}
+
+	.slider-group.active-filter {
+		border-color: #00b4d8;
+		background: rgba(0, 180, 216, 0.15);
 	}
 
 	.slider-group > label {
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--text-primary);
+	}
+
+	.slider-group input[type='range'] {
+		width: 100%;
+		accent-color: #6eb5ff;
+		cursor: pointer;
 	}
 
 	.year-slider {
@@ -891,6 +1117,35 @@
 		color: var(--text-primary);
 	}
 
+	.toggle-group {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.toggle-btn {
+		padding: 0.3rem 0.6rem;
+		border: 1px solid var(--border-color);
+		border-radius: 999px;
+		background: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.75rem;
+		font-family: inherit;
+		transition: background 0.15s, color 0.15s, opacity 0.15s;
+		opacity: 0.5;
+	}
+
+	.toggle-btn.active {
+		background: var(--bg-cell);
+		color: var(--text-primary);
+		opacity: 1;
+	}
+
+	.toggle-btn:hover {
+		background: var(--bg-cell);
+	}
+
 	.solubility-body {
 		display: flex;
 		flex-direction: column;
@@ -920,5 +1175,4 @@
 	.solubility-toggle:hover {
 		background: var(--border-color);
 	}
-
 </style>

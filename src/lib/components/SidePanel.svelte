@@ -723,7 +723,11 @@
 	}
 
 	.section {
-		margin-top: 1rem;
+		margin-top: 1.5rem;
+	}
+
+	.section:first-child {
+		margin-top: 1.5rem;
 	}
 
 	h3 {
@@ -994,8 +998,12 @@
 
 		.content {
 			padding: 1.25rem 1rem;
-			padding-bottom: 4rem;
+			padding-bottom: 6rem;
 			max-width: none;
+		}
+
+		.section:first-child {
+			margin-top: 0.25rem;
 		}
 
 		.detail-close-bar {
