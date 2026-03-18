@@ -14,9 +14,11 @@
 		heatmapFills: Map<number, number | null> | null;
 		heatmapMeta: { label: string; unit: string; min: number; max: number } | null;
 		solubilityColors: Map<number, string> | null;
+		oncategoryclick?: (category: string) => void;
+		onphaseclick?: (phase: string) => void;
 	}
 
-	let { elements, phases, dimmedSet, onselect, heatmapFills, heatmapMeta, solubilityColors = null }: Props = $props();
+	let { elements, phases, dimmedSet, onselect, heatmapFills, heatmapMeta, solubilityColors = null, oncategoryclick, onphaseclick }: Props = $props();
 
 	const categories: ElementCategory[] = [
 		// Col 1: Metals       Col 2:                Col 3:
@@ -52,19 +54,23 @@
 			{:else if solubilityColors}
 				<SolubilityLegend />
 			{:else}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="legend-categories">
 					{#each categories as cat}
-						<div class="legend-item">
+						<div class="legend-item clickable" onclick={() => oncategoryclick?.(cat)}>
 							<span class="swatch" style:background={categoryColors[cat]}></span>
 							<span class="legend-label">{categoryLabels[cat]}</span>
 						</div>
 					{/each}
 				</div>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="phase-legend">
-					<span class="phase-item"><span class="phase-sample solid"></span> Solid</span>
-					<span class="phase-item"><span class="phase-sample liquid"></span> Liquid</span>
-					<span class="phase-item"><span class="phase-sample gas"></span> Gas</span>
-					<span class="phase-item"><span class="phase-sample unknown"></span> Unknown</span>
+					<span class="phase-item clickable" onclick={() => onphaseclick?.('Solid')}><span class="phase-sample solid"></span> Solid</span>
+					<span class="phase-item clickable" onclick={() => onphaseclick?.('Liquid')}><span class="phase-sample liquid"></span> Liquid</span>
+					<span class="phase-item clickable" onclick={() => onphaseclick?.('Gas')}><span class="phase-sample gas"></span> Gas</span>
+					<span class="phase-item clickable" onclick={() => onphaseclick?.('Unknown')}><span class="phase-sample unknown"></span> Unknown</span>
 				</div>
 			{/if}
 		</div>
@@ -97,6 +103,7 @@
 		grid-template-columns: repeat(18, 3.2rem);
 		grid-template-rows: repeat(7, 3.2rem) 1.5rem repeat(2, 3.2rem);
 		gap: 0px;
+		width: fit-content;
 		margin: 0 auto;
 	}
 
@@ -122,6 +129,14 @@
 		display: flex;
 		align-items: center;
 		gap: 0.3rem;
+	}
+
+	.clickable {
+		cursor: pointer;
+	}
+
+	.clickable:hover {
+		opacity: 0.7;
 	}
 
 	.swatch {

@@ -276,6 +276,28 @@
 		yearFilter = Number((e.target as HTMLInputElement).value);
 	}
 
+	function handleCategoryLegendClick(category: string) {
+		toggleCategory(category);
+		selectRangeFilter('category');
+		if (isPortraitMode) {
+			filtersModalOpen = true;
+		} else {
+			menuOpen = true;
+			menuView = 'filters';
+		}
+	}
+
+	function handlePhaseLegendClick(phase: string) {
+		togglePhase(phase);
+		selectRangeFilter('phase');
+		if (isPortraitMode) {
+			filtersModalOpen = true;
+		} else {
+			menuOpen = true;
+			menuView = 'filters';
+		}
+	}
+
 	// --- Menu popup ---
 	let menuOpen = $state(false);
 	let menuView: 'controls' | 'properties' | 'elements' | 'filters' | 'solubility' = $state('controls');
@@ -702,7 +724,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <main class="table-area" class:menu-push={menuOpen} bind:this={tableAreaEl} onwheel={handleWheel}>
 	<div class="table-zoom-container" bind:this={zoomContainerEl} style:transform="scale({tableZoom})" style:transform-origin="top left" style:margin-bottom="{-(naturalHeight * (1 - tableZoom))}px" style:margin-right="{-(naturalWidth * (1 - tableZoom))}px">
-		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapFills : null} heatmapMeta={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} />
+		<PeriodicTable {elements} {phases} {dimmedSet} onselect={handleSelect} heatmapFills={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapFills : null} heatmapMeta={(menuOpen && menuView === 'properties' || propertiesModalOpen) && !solubilityActive ? heatmapMeta : null} solubilityColors={solubilityColorMap} oncategoryclick={handleCategoryLegendClick} onphaseclick={handlePhaseLegendClick} />
 	</div>
 </main>
 
