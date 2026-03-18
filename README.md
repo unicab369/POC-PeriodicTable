@@ -1,42 +1,42 @@
-# sv
+# POC Periodic Table
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+An interactive periodic table built with SvelteKit and Svelte 5.
 
-## Creating a project
+## Screenshots
 
-If you're seeing this, you've probably already done this step. Congrats!
+### Desktop
 
-```sh
-# create a new project
-npx sv create my-app
-```
+![Periodic Table Overview](docs/img0.png)
 
-To recreate this project with the same configuration:
+![Element Details](docs/img1.png)
 
-```sh
-# recreate this project
-npx sv@0.12.7 create --template minimal --types ts --no-install svelte-scaffold
-```
+![Filters](docs/img2.png)
+
+![Raw Data Table](docs/img3.png)
+
+![Properties Heatmap](docs/img10.png)
+
+### Mobile
+
+| Table View | Element Details | Element List |
+|:---:|:---:|:---:|
+| ![Table](docs/img5.png) | ![Details](docs/img6.png) | ![List](docs/img7.png) |
+
+| Acids & Bases | Solubility Table |
+|:---:|:---:|
+| ![Acids & Bases](docs/img8.png) | ![Solubility](docs/img9.png) |
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
 ```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
 ## Building
-
-To create a production version of your app:
 
 ```sh
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Preview the production build with `npm run preview`.

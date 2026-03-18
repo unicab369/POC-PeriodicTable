@@ -397,11 +397,15 @@
 				? Math.max(fitWidth * 2, fitHeight, minZoom)
 				: Math.max(2, minZoom);
 
-			const orientationChanged = lastIsPortrait !== null && lastIsPortrait !== isPortrait;
+			const isFirstRun = lastIsPortrait === null;
+			const orientationChanged = !isFirstRun && lastIsPortrait !== isPortrait;
 			lastIsPortrait = isPortrait;
 
-			if (orientationChanged) {
-				tableZoom = fitWidth;
+			if ((isFirstRun || orientationChanged) && isPortrait) {
+				tableZoom = Math.min(2, maxZoom);
+				tableAreaEl.scrollLeft = 0;
+			} else if (orientationChanged && !isPortrait) {
+				tableZoom = minZoom;
 				tableAreaEl.scrollLeft = 0;
 			} else {
 				tableZoom = Math.min(Math.max(tableZoom, minZoom), maxZoom);
