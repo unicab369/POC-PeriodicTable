@@ -126,14 +126,14 @@
 
 	.swatch {
 		display: inline-block;
-		width: 18px;
-		height: 18px;
+		width: 15px;
+		height: 15px;
 		border-radius: 2px;
 		flex-shrink: 0;
 	}
 
 	.legend-label {
-		font-size: 1.1em;
+		font-size: 1em;
 		color: var(--text-secondary);
 		white-space: nowrap;
 	}
@@ -149,14 +149,14 @@
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
-		font-size: 1.1em;
+		font-size: 1em;
 		color: var(--text-secondary);
 	}
 
 	.phase-sample {
 		display: inline-block;
-		width: 18px;
-		height: 18px;
+		width: 15px;
+		height: 15px;
 		border-radius: 2px;
 		background: var(--bg-cell);
 	}

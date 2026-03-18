@@ -370,8 +370,10 @@
 			const fitWidth = areaWidth / naturalWidth;
 			const fitHeight = areaHeight / naturalHeight;
 			const isPortrait = areaHeight > areaWidth;
-			minZoom = Math.min(fitWidth, fitHeight, 1);
-			maxZoom = Math.max(fitWidth * 2, fitHeight, minZoom);
+			minZoom = Math.min(fitWidth, fitHeight, 1) * 0.95;
+			maxZoom = isPortrait
+				? Math.max(fitWidth * 2, fitHeight, minZoom)
+				: Math.max(2, minZoom);
 
 			const orientationChanged = lastIsPortrait !== null && lastIsPortrait !== isPortrait;
 			lastIsPortrait = isPortrait;
